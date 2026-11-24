@@ -339,6 +339,23 @@ label.button {
   margin: 8px 0 0;
 }
 
+/* チェックボックス（指で押しやすいよう、箱も行も大きくする） */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  margin-top: 8px;
+  font-weight: 800;
+}
+
+.check input {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  accent-color: var(--main);
+}
+
 .notes {
   margin: 0;
   padding-left: 1.2em;

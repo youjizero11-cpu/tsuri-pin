@@ -9,9 +9,8 @@ import { getBestPosition, formatCoord, distanceM } from '../geo.js';
 import { saveAll, getAll, getPinsNewestFirst } from '../db.js';
 import { newId, toIsoLocal, formatDateTime } from '../util.js';
 import { createEmptyCatch } from './catch.js';
+import { getSetting } from '../settings-store.js';
 
-// この距離より近くに既存のピンがあれば「追加しますか」と聞く（メートル）
-const NEARBY_M = 50;
 // 何も押さなかったとき、自動で「追加」を選ぶまでの秒数
 const AUTO_ADD_SECONDS = 5;
 
@@ -29,12 +28,16 @@ const BUTTON_LABEL = 'ピンを<br>打つ';
 
 // ---------- 近くのピンを探す ----------
 
-// いちばん近いピンと、そこまでの距離を返す。NEARBY_M より遠ければ null
+// いちばん近いピンと、そこまでの距離を返す。
+// 設定の距離（初期値50m）より遠ければ null。設定が0なら、いつも null（聞かない）
 async function findNearbyPin(lat, lon) {
+  const nearbyM = getSetting('nearbyM');
+  if (nearbyM === 0) return null;
+
   let nearest = null;
   for (const pin of await getAll('pins')) {
     const distance = distanceM(lat, lon, pin.lat, pin.lon);
-    if (distance <= NEARBY_M && (!nearest || distance < nearest.distance)) {
+    if (distance <= nearbyM && (!nearest || distance < nearest.distance)) {
       nearest = { pin, distance };
     }
   }
@@ -167,7 +170,7 @@ async function showRecentPins() {
 
     const coord = document.createElement('div');
     coord.className = 'row-sub';
-    coord.textContent = formatCoord(pin.lat, pin.lon) + '（±' + pin.accuracyM + 'm）';
+    coord.textContent = formatCoord(pin.lat, pin.lon, getSetting('coordFormat')) + '（±' + pin.accuracyM + 'm）';
 
     link.append(name, coord);
 

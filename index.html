@@ -201,8 +201,68 @@
     <h1 class="screen-title">設定・データ</h1>
 
     <section class="card">
+      <h2>表示の設定</h2>
+      <label class="field field-first">
+        距離の単位
+        <select id="set-distance">
+          <option value="m">メートル（m / km）</option>
+          <option value="nm">海里（NM）</option>
+        </select>
+      </label>
+      <label class="field">
+        座標の形式
+        <select id="set-coord">
+          <option value="dm">度分（34°12.345′N）</option>
+          <option value="dd">10進（34.20575）</option>
+        </select>
+      </label>
+      <label class="field">
+        近くのピンに追加するか聞く距離
+        <select id="set-nearby">
+          <option value="0">聞かない（毎回新しいピン）</option>
+          <option value="20">20m以内</option>
+          <option value="50">50m以内</option>
+          <option value="100">100m以内</option>
+          <option value="200">200m以内</option>
+        </select>
+      </label>
+      <p id="set-status" class="button-note" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>データの書き出し</h2>
+      <button id="export-csv" class="button" type="button">CSVで書き出す（表計算用）</button>
+      <p class="small-note">Excelなどで見るための表です。写真は入りません。</p>
+
+      <button id="export-json" class="button" type="button">バックアップを書き出す</button>
+      <label class="check">
+        <input id="export-photos" type="checkbox" checked>
+        写真も含める
+      </label>
+      <p class="small-note">あとで読み込んで元に戻せるファイル（JSON）です。写真を含めるとファイルが大きくなります。</p>
+
+      <button id="export-send" class="button button-tall" type="button" hidden>保存・共有する</button>
+      <p id="export-status" class="button-note" role="status"></p>
+      <p class="small-note">ファイルには釣り場の位置が入っています。渡す相手に気をつけてください。</p>
+    </section>
+
+    <section class="card">
+      <h2>バックアップの読み込み</h2>
+      <label class="button button-sub">
+        バックアップを読み込む
+        <input id="import-file" type="file" accept=".json,application/json" hidden>
+      </label>
+      <p id="import-status" class="status" role="status"></p>
+      <p class="small-note">「バックアップを書き出す」で作ったファイルを選びます。いまのデータは消えません。同じものがあるときは、あとで更新された方を残します。</p>
+    </section>
+
+    <section class="card">
       <h2>アプリの状態</h2>
       <dl class="info">
+        <dt>保存データ</dt>
+        <dd id="info-data">確認中…</dd>
+        <dt>使用容量</dt>
+        <dd id="info-storage">確認中…</dd>
         <dt>版</dt>
         <dd id="info-version">確認中…</dd>
         <dt>オフライン準備</dt>
@@ -218,7 +278,7 @@
       <h2>海に出る前に</h2>
       <ul class="notes">
         <li>電波のある場所で、一度このアプリを開いてください。</li>
-        <li>データはこの端末の中にしかありません。</li>
+        <li>データはこの端末の中にしかありません。ときどき「バックアップを書き出す」で保管してください。</li>
         <li>iPhoneは「ホーム画面に追加」して使ってください。</li>
       </ul>
     </section>

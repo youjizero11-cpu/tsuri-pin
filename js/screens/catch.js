@@ -11,6 +11,7 @@ import { get, saveAll, getSpeciesList } from '../db.js';
 import { resizePhoto } from '../photo.js';
 import { formatCoord, LOW_ACCURACY_M } from '../geo.js';
 import { newId, toIsoLocal } from '../util.js';
+import { getSetting } from '../settings-store.js';
 
 // ---------- 画面の部品 ----------
 
@@ -114,7 +115,7 @@ async function open(record, { quick, isNew, photo }) {
       // 近くのピンに追加した直後
       messageEl.textContent = '「' + pin.name + '」に追加しました';
     }
-    subEl.textContent = formatCoord(pin.lat, pin.lon);
+    subEl.textContent = formatCoord(pin.lat, pin.lon, getSetting('coordFormat'));
   } else {
     titleEl.textContent = isNew ? '釣果を追加' : '釣果の編集';
     messageEl.textContent = '';

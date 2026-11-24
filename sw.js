@@ -11,7 +11,7 @@
 // ★ ファイルを追加したら、下の FILES にも追加する。
 // ============================================================
 
-const VERSION = 'v6';
+const VERSION = 'v7';
 const CACHE_NAME = 'tsuri-pin-' + VERSION;
 
 // 端末に保存するファイルの一覧
@@ -25,6 +25,9 @@ const FILES = [
   './js/db.js',
   './js/geo.js',
   './js/photo.js',
+  './js/settings-store.js',
+  './js/export.js',
+  './js/screens/settings.js',
   './js/compass.js',
   './js/screens/nav.js',
   './js/screens/home.js',

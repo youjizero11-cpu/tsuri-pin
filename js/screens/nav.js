@@ -12,6 +12,7 @@
 
 import { get } from '../db.js';
 import { distanceM, bearingDeg, directionName, formatDistance } from '../geo.js';
+import { getSetting } from '../settings-store.js';
 import { compassNeedsPermission, requestCompassPermission, startCompass } from '../compass.js';
 
 // これより遅いときは、GPSの進行方向を信用しない（秒速0.6m ≒ 時速2km）
@@ -73,7 +74,7 @@ function render() {
   const distance = distanceM(position.lat, position.lon, pin.lat, pin.lon);
   const bearing = bearingDeg(position.lat, position.lon, pin.lat, pin.lon);
 
-  distanceEl.textContent = formatDistance(distance);
+  distanceEl.textContent = formatDistance(distance, getSetting('distanceUnit'));
   accuracyEl.textContent = 'GPSの精度 ±' + Math.round(position.accuracyM) + 'm';
   bearingEl.textContent = 'ピンの方角　' + directionName(bearing) + '（北から' + Math.round(bearing) + '°）';
 

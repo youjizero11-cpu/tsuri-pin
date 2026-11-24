@@ -9,6 +9,7 @@
 
 import { get, saveAll, getCatchesOfPin } from '../db.js';
 import { formatCoord } from '../geo.js';
+import { getSetting } from '../settings-store.js';
 import { formatDateTime, toIsoLocal } from '../util.js';
 
 const titleEl = document.getElementById('pin-title');
@@ -50,7 +51,7 @@ export async function showPin(pinId) {
   current = pin;
 
   titleEl.textContent = pin.name;
-  coordEl.textContent = formatCoord(pin.lat, pin.lon) + '（±' + pin.accuracyM + 'm）';
+  coordEl.textContent = formatCoord(pin.lat, pin.lon, getSetting('coordFormat')) + '（±' + pin.accuracyM + 'm）';
   addLink.href = '#newcatch/' + pin.id;
   navLink.href = '#nav/' + pin.id;
 

@@ -10,6 +10,8 @@ import { initCatch, showCatch, showNewCatch } from './screens/catch.js';
 import { initPin, showPin } from './screens/pin.js';
 import { initList, showList } from './screens/list.js';
 import { initNav, showNav, hideNav } from './screens/nav.js';
+import { initSettings, showSettings } from './screens/settings.js';
+import { loadSettings } from './settings-store.js';
 
 // ---------- 1. 画面の切り替え ----------
 // URLの末尾の「#home」「#pin/abc123」などを見て、対応する画面だけを表示する。
@@ -26,7 +28,7 @@ import { initNav, showNav, hideNav } from './screens/nav.js';
 const ROUTES = {
   home:     { screen: 'home',     tab: 'home',     show: () => showHome() },
   list:     { screen: 'list',     tab: 'list',     show: () => showList() },
-  settings: { screen: 'settings', tab: 'settings' },
+  settings: { screen: 'settings', tab: 'settings', show: () => showSettings() },
   // ピンを打った直後の、かんたん入力
   after:    { screen: 'catch',    tab: 'home',     show: (id) => showCatch(id, { quick: true }) },
   // 釣果の編集
@@ -83,9 +85,11 @@ initCatch();
 initPin();
 initList();
 initNav();
+initSettings();
 
 window.addEventListener('hashchange', showScreen);
-showScreen();
+// 設定（距離の単位など）を読み込んでから、最初の画面を出す
+loadSettings().then(showScreen);
 
 // ---------- データを勝手に消されないよう、ブラウザに頼む ----------
 // 端末の空き容量が減ると、ブラウザが保存データを消すことがある。

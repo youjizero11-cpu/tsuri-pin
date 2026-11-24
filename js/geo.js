@@ -134,8 +134,21 @@ export function directionName(deg) {
   return names[Math.round(deg / 45) % 8];
 }
 
-// 距離を画面に出す形にする（例: 「350 m」「2.4 km」）
-export function formatDistance(meters) {
+// 1海里は1852メートル
+const METERS_PER_NM = 1852;
+
+// 距離を画面に出す形にする
+//   unit 'm' : 「350 m」「2.4 km」
+//   unit 'nm': 「1.3 NM」（海里）。0.1海里より近ければ「150 m」
+export function formatDistance(meters, unit = 'm') {
+  if (unit === 'nm') {
+    const nm = meters / METERS_PER_NM;
+    if (nm >= 0.1) {
+      return (nm < 100 ? nm.toFixed(1) : Math.round(nm)) + ' NM';
+    }
+    return Math.round(meters) + ' m';
+  }
+
   if (meters < 1000) {
     return Math.round(meters) + ' m';
   }
