@@ -38,6 +38,21 @@
     <!-- GPSの状態やエラーを出す場所 -->
     <p id="home-status" class="status" role="status"></p>
 
+    <!-- ピンの地図。日本全体 → 印を押すとその海域を拡大（中身は js/pinmap.js が描く） -->
+    <section id="pinmap" class="card pinmap">
+      <h2 id="pinmap-title">ピンの地図</h2>
+      <svg id="pinmap-svg" class="pinmap-svg" viewBox="0 0 1000 1000" role="img" aria-label="ピンの地図"></svg>
+      <p id="pinmap-note" class="small-note"></p>
+
+      <!-- 海域を拡大しているときだけ出す -->
+      <div id="pinmap-area" hidden>
+        <ul id="pinmap-list" class="row-list pinmap-list"></ul>
+        <button id="pinmap-locate" class="button" type="button">現在地を表示</button>
+        <p id="pinmap-status" class="button-note" role="status"></p>
+        <button id="pinmap-back" class="button button-sub" type="button">日本全体に戻る</button>
+      </div>
+    </section>
+
     <!-- 最近のピン（1件もないときは隠す） -->
     <section id="recent" class="card recent" hidden>
       <h2>最近のピン</h2>

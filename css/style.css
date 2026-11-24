@@ -135,6 +135,83 @@ body {
   margin: 24px 0;
 }
 
+/* ---------- ピンの地図 ---------- */
+
+.pinmap {
+  align-self: stretch;
+}
+
+/* 地図の枠。白が海 */
+.pinmap-svg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  /* 地図の上で指を動かしても、文字が選択されないようにする */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 地図の中の部品。太さや文字の大きさは、0〜1000 の方眼紙での値 */
+.map-land {
+  fill: #c8c8c8;
+  stroke: var(--line);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.map-marker {
+  cursor: pointer;
+}
+
+.map-tap {
+  fill: transparent;
+}
+
+.map-pin {
+  fill: var(--accent);
+  stroke: var(--line);
+  stroke-width: 6;
+}
+
+.map-pin-text {
+  fill: #ffffff;
+  font-size: 46px;
+  font-weight: 900;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+}
+
+.map-me {
+  fill: var(--main);
+  stroke: #ffffff;
+  stroke-width: 6;
+}
+
+.map-north {
+  fill: var(--line);
+}
+
+.map-scale {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 8;
+}
+
+.map-label {
+  fill: var(--text);
+  font-size: 44px;
+  font-weight: 800;
+}
+
+.pinmap-list {
+  margin-top: 8px;
+  border-top: 2px solid var(--line);
+}
+
 /* ---------- 押せる行のリスト（最近のピン、釣果の履歴） ---------- */
 
 .recent {

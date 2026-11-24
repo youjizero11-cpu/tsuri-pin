@@ -10,6 +10,7 @@ import { saveAll, getAll, getPinsNewestFirst } from '../db.js';
 import { newId, toIsoLocal, formatDateTime } from '../util.js';
 import { createEmptyCatch } from './catch.js';
 import { getSetting } from '../settings-store.js';
+import { initPinMap, showPinMap } from '../pinmap.js';
 
 // 何も押さなかったとき、自動で「追加」を選ぶまでの秒数
 const AUTO_ADD_SECONDS = 5;
@@ -190,9 +191,10 @@ async function showRecentPins() {
 // 最初に1回だけ
 export function initHome() {
   button.addEventListener('click', onPinButton);
+  initPinMap();
 }
 
 // ホーム画面を表示するたび
 export function showHome() {
-  showRecentPins();
+  return Promise.all([showRecentPins(), showPinMap()]);
 }
