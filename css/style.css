@@ -295,6 +295,13 @@ body {
   background: var(--accent);
 }
 
+/* 押せない間（ファイルを作っている間など）は灰色にして、押せないことが分かるようにする */
+.button:disabled {
+  background: #666666;
+  color: #ffffff;
+  cursor: wait;
+}
+
 /* <a> や <label> をボタンの見た目にしたとき、文字を真ん中に置く */
 a.button,
 label.button {
@@ -414,6 +421,25 @@ label.button {
 .nav-info {
   margin: 4px 0;
   text-align: center;
+}
+
+/* ---------- うまく動かなかったときのお知らせ ---------- */
+
+.app-error {
+  position: fixed;
+  top: calc(8px + env(safe-area-inset-top));
+  left: 8px;
+  right: 8px;
+  z-index: 10;
+  min-height: var(--min-tap);
+  padding: 12px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: #ffe600;
+  color: var(--text);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
 }
 
 /* ---------- 下のタブ ---------- */

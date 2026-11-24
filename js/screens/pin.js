@@ -98,7 +98,13 @@ async function onSave() {
   current.memo = memoInput.value.trim();
   current.updatedAt = toIsoLocal(new Date());
 
-  await saveAll([{ store: 'pins', value: current }]);
+  try {
+    await saveAll([{ store: 'pins', value: current }]);
+  } catch (error) {
+    console.error(error);
+    saveStatus.textContent = '保存できませんでした。端末の空き容量を確認してください。';
+    return;
+  }
 
   nameInput.value = current.name;
   titleEl.textContent = current.name;
@@ -132,7 +138,13 @@ async function onDelete() {
     deletions.push({ store: 'catches', key: record.id });
     deletions.push({ store: 'photos', key: record.id });
   }
-  await saveAll([], deletions);
+  try {
+    await saveAll([], deletions);
+  } catch (error) {
+    console.error(error);
+    alert('削除できませんでした。アプリを開き直して、もう一度試してください。');
+    return;
+  }
 
   location.hash = '#list';
 }

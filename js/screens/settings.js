@@ -6,7 +6,8 @@
 //   ・保存しているデータの件数と、使っている容量
 // ============================================================
 
-import { getAll } from '../db.js';
+import { getAll, get, saveAll } from '../db.js';
+import { formatDateTime, toIsoLocal } from '../util.js';
 import { getSetting, setSetting } from '../settings-store.js';
 import {
   buildCsv, buildJson, readBackup, importBackup,
@@ -29,6 +30,7 @@ const importStatus = document.getElementById('import-status');
 
 const dataEl = document.getElementById('info-data');
 const storageEl = document.getElementById('info-storage');
+const backupEl = document.getElementById('info-backup');
 
 // 作ったけれど、まだ渡せていないファイル（「保存・共有する」ボタン用）
 let pendingFile = null;
@@ -39,6 +41,10 @@ async function showDataInfo() {
   const [pins, catches] = await Promise.all([getAll('pins'), getAll('catches')]);
   const photoCount = catches.filter((c) => c.hasPhoto).length;
   dataEl.textContent = 'ピン' + pins.length + '件・釣果' + catches.length + '件・写真' + photoCount + '枚';
+
+  // 最後にバックアップを書き出した日時
+  const lastBackup = await get('settings', 'lastBackupAt');
+  backupEl.textContent = lastBackup ? formatDateTime(lastBackup.value) : 'まだありません';
 
   // 端末がこのアプリのために使っている容量（おおよその値）
   if (navigator.storage && navigator.storage.estimate) {
@@ -91,6 +97,7 @@ async function deliver(file) {
   if (!canShareFile(file)) {
     downloadFile(file);
     exportStatus.textContent = file.name + ' をダウンロードしました。';
+    await rememberBackup(file);
     return;
   }
 
@@ -99,6 +106,7 @@ async function deliver(file) {
     exportStatus.textContent = file.name + ' を渡しました。';
     sendButton.hidden = true;
     pendingFile = null;
+    await rememberBackup(file);
   } catch (error) {
     if (error.name === 'AbortError') {
       // 共有メニューを閉じただけ
@@ -112,7 +120,20 @@ async function deliver(file) {
     } else {
       downloadFile(file);
       exportStatus.textContent = file.name + ' をダウンロードしました。';
+      await rememberBackup(file);
     }
+  }
+}
+
+// バックアップ（JSON）を渡せたら、その日時を覚えておく。
+// 設定画面の「最後のバックアップ」に出して、しばらく取っていないことに気づけるようにする。
+async function rememberBackup(file) {
+  if (!file.name.endsWith('.json')) return;
+  try {
+    await saveAll([{ store: 'settings', value: { key: 'lastBackupAt', value: toIsoLocal(new Date()) } }]);
+    await showDataInfo();
+  } catch (error) {
+    console.error(error);
   }
 }
 

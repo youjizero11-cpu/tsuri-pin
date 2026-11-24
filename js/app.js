@@ -41,6 +41,27 @@ const ROUTES = {
   nav:      { screen: 'nav',      tab: 'list',     show: (id) => showNav(id), hide: () => hideNav() },
 };
 
+// ---------- うまく動かなかったときのお知らせ ----------
+// 想定していない失敗が起きたとき、何も起きないまま固まって見えるのがいちばん困る。
+// 画面の上に黄色いお知らせを出して、どうすればよいかを伝える。
+
+const errorEl = document.getElementById('app-error');
+
+function showAppError(error) {
+  console.error(error);
+  errorEl.textContent =
+    'うまく動きませんでした。アプリを一度閉じて、開き直してください。（ここを押すと消えます）';
+  errorEl.hidden = false;
+}
+
+errorEl.addEventListener('click', () => {
+  errorEl.hidden = true;
+});
+
+// どこにも受け止められなかった失敗を、ここでまとめて受け止める
+window.addEventListener('error', (event) => showAppError(event.error || event.message));
+window.addEventListener('unhandledrejection', (event) => showAppError(event.reason));
+
 // いま表示している行き先
 let currentRoute = null;
 
@@ -56,8 +77,13 @@ async function showScreen() {
   currentRoute = route;
 
   // 先に中身を用意する（古い内容が一瞬見えるのを防ぐ）
+  // 用意に失敗しても、画面の切り替えだけは続ける（真っ白のまま止まらないように）
   if (route.show) {
-    await route.show(id);
+    try {
+      await route.show(id);
+    } catch (error) {
+      showAppError(error);
+    }
   }
 
   // 該当する画面だけ表示し、他は隠す
@@ -96,7 +122,7 @@ loadSettings().then(showScreen);
 // 「このアプリのデータは残して」と頼んでおく（聞いてもらえるかは端末しだい）。
 
 if (navigator.storage && navigator.storage.persist) {
-  navigator.storage.persist();
+  navigator.storage.persist().catch(() => {});
 }
 
 // ---------- 2. Service Worker の登録 ----------
@@ -201,6 +227,16 @@ async function showAppInfo() {
   }
 }
 
+// ホーム画面のアイコンから開いているか。
+// ブラウザで開いたままだと、長く使わなかったときにデータが消されることがある（特にiPhone）。
+function showLaunch() {
+  const fromHomeScreen =
+    window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  document.getElementById('info-launch').textContent = fromHomeScreen
+    ? 'ホーム画面から'
+    : 'ブラウザから（「ホーム画面に追加」して使ってください）';
+}
+
 function showNetwork() {
   document.getElementById('info-network').textContent =
     navigator.onLine ? 'つながっています' : '圏外';
@@ -210,4 +246,5 @@ window.addEventListener('online', showNetwork);
 window.addEventListener('offline', showNetwork);
 
 showNetwork();
+showLaunch();
 showAppInfo();

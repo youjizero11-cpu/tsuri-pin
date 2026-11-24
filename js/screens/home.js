@@ -136,7 +136,12 @@ async function onPinButton() {
     const newCatch = createEmptyCatch(targetPin.id, pressedAt);
     entries.push({ store: 'catches', value: newCatch });
 
-    await saveAll(entries);
+    try {
+      await saveAll(entries);
+    } catch (error) {
+      console.error(error);
+      throw new Error('保存できませんでした。端末の空き容量を確認して、もう一度押してください。');
+    }
 
     // 保存できたので、かんたん入力の画面へ進む
     statusEl.textContent = '';

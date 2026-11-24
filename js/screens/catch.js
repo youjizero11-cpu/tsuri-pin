@@ -245,10 +245,16 @@ async function onSave() {
 async function onDelete() {
   if (!confirm('この釣果を削除しますか？\n写真も一緒に消えます。')) return;
 
-  await saveAll([], [
-    { store: 'catches', key: current.id },
-    { store: 'photos', key: current.id },
-  ]);
+  try {
+    await saveAll([], [
+      { store: 'catches', key: current.id },
+      { store: 'photos', key: current.id },
+    ]);
+  } catch (error) {
+    console.error(error);
+    photoStatus.textContent = '削除できませんでした。アプリを開き直して、もう一度試してください。';
+    return;
+  }
   goBack();
 }
 
