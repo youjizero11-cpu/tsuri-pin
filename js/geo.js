@@ -111,6 +111,38 @@ export function distanceM(lat1, lon1, lat2, lon2) {
   return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a));
 }
 
+// ---------- 2点間の方位 ----------
+
+// 地点1から見て、地点2がどの方角にあるかを返す。
+// 北が0度、東が90度、南が180度、西が270度（時計回り）。
+export function bearingDeg(lat1, lon1, lat2, lon2) {
+  const toRad = (deg) => deg * Math.PI / 180;
+  const toDeg = (rad) => rad * 180 / Math.PI;
+
+  const dLon = toRad(lon2 - lon1);
+  const y = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x =
+    Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+    Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+// 角度を8方位の名前にする（例: 45 → 「北東」）
+export function directionName(deg) {
+  const names = ['北', '北東', '東', '南東', '南', '南西', '西', '北西'];
+  return names[Math.round(deg / 45) % 8];
+}
+
+// 距離を画面に出す形にする（例: 「350 m」「2.4 km」）
+export function formatDistance(meters) {
+  if (meters < 1000) {
+    return Math.round(meters) + ' m';
+  }
+  const km = meters / 1000;
+  return (km < 100 ? km.toFixed(1) : Math.round(km)) + ' km';
+}
+
 // ---------- 緯度経度の表示 ----------
 
 // 1つの値を「34°12.345′N」の形（度分）にする

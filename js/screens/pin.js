@@ -14,6 +14,7 @@ import { formatDateTime, toIsoLocal } from '../util.js';
 const titleEl = document.getElementById('pin-title');
 const coordEl = document.getElementById('pin-coord');
 const addLink = document.getElementById('pin-add-catch');
+const navLink = document.getElementById('pin-nav');
 const catchList = document.getElementById('pin-catch-list');
 const emptyEl = document.getElementById('pin-catch-empty');
 
@@ -51,6 +52,7 @@ export async function showPin(pinId) {
   titleEl.textContent = pin.name;
   coordEl.textContent = formatCoord(pin.lat, pin.lon) + '（±' + pin.accuracyM + 'm）';
   addLink.href = '#newcatch/' + pin.id;
+  navLink.href = '#nav/' + pin.id;
 
   nameInput.value = pin.name;
   memoInput.value = pin.memo;

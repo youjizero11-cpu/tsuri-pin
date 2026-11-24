@@ -353,6 +353,52 @@ label.button {
   text-align: center;
 }
 
+/* ---------- ナビ ---------- */
+
+.nav-name {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* 距離は、腕を伸ばした位置からでも読める大きさにする */
+.nav-distance {
+  margin: 8px 0;
+  font-size: clamp(64px, 22vw, 120px);
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.nav-arrow-box {
+  width: min(60vw, 36vh);
+  aspect-ratio: 1;
+  margin: 16px auto;
+  border: 6px solid var(--line);
+  border-radius: 50%;
+  background: var(--bg);
+}
+
+.nav-arrow {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 向きが変わったとき、少しなめらかに回す */
+  transition: transform 0.2s linear;
+}
+
+.nav-arrow polygon {
+  fill: var(--accent);
+  stroke: var(--line);
+  stroke-width: 3;
+  stroke-linejoin: round;
+}
+
+.nav-info {
+  margin: 4px 0;
+  text-align: center;
+}
+
 /* ---------- 下のタブ ---------- */
 
 .tabbar {

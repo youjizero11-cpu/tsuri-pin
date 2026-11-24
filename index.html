@@ -118,7 +118,8 @@
     <h1 id="pin-title" class="screen-title"></h1>
     <p id="pin-coord" class="status-detail"></p>
 
-    <a id="pin-add-catch" class="button button-tall" href="#home">釣果を追加</a>
+    <a id="pin-nav" class="button button-tall" href="#home">ここへ戻る（ナビ）</a>
+    <a id="pin-add-catch" class="button button-sub" href="#home">釣果を追加</a>
 
     <section class="card">
       <h2>このピンの釣果</h2>
@@ -164,6 +165,35 @@
     <section id="list-card" class="card" hidden>
       <ul id="list-rows" class="row-list"></ul>
     </section>
+  </main>
+
+  <!-- ===== 画面6: ピンへ戻るナビ ===== -->
+  <main id="screen-nav" class="screen" hidden>
+    <h1 class="screen-title">ピンへ戻る</h1>
+    <p id="nav-name" class="nav-name"></p>
+
+    <!-- ピンまでの距離 -->
+    <p id="nav-distance" class="nav-distance">— m</p>
+    <p id="nav-arrived" class="status is-warning" hidden>到着（誤差の範囲内です）</p>
+
+    <!-- 方角の矢印。丸ごと回して、ピンのある方向を指す -->
+    <div id="nav-arrow-box" class="nav-arrow-box" hidden>
+      <svg id="nav-arrow" class="nav-arrow" viewBox="0 0 100 100" aria-hidden="true">
+        <polygon points="50,6 80,78 50,62 20,78"></polygon>
+      </svg>
+    </div>
+    <p id="nav-arrow-hint" class="status"></p>
+
+    <p id="nav-bearing" class="status-detail"></p>
+    <p id="nav-accuracy" class="nav-info"></p>
+    <p id="nav-basis" class="nav-info"></p>
+
+    <button id="nav-permit" class="button button-tall" type="button" hidden>コンパスを使う</button>
+    <button id="nav-mode" class="button button-sub" type="button"></button>
+    <a id="nav-end" class="button button-sub" href="#list">ナビを終了</a>
+
+    <p class="small-note">矢印の向きがおかしいときは、スマホを8の字に振ると直ることがあります。船の金属やエンジンの近くではコンパスが狂うので、そのときは「進行方向（GPS）基準」に切り替えてください。</p>
+    <p id="nav-screen-note" class="small-note"></p>
   </main>
 
   <!-- ===== 画面7: 設定・データ ===== -->

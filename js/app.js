@@ -9,6 +9,7 @@ import { initHome, showHome } from './screens/home.js';
 import { initCatch, showCatch, showNewCatch } from './screens/catch.js';
 import { initPin, showPin } from './screens/pin.js';
 import { initList, showList } from './screens/list.js';
+import { initNav, showNav, hideNav } from './screens/nav.js';
 
 // ---------- 1. 画面の切り替え ----------
 // URLの末尾の「#home」「#pin/abc123」などを見て、対応する画面だけを表示する。
@@ -20,6 +21,7 @@ import { initList, showList } from './screens/list.js';
 //   screen  表示する画面（index.html の id="screen-〇〇"）
 //   tab     下のタブのどれを「いまここ」にするか
 //   show    画面を出す前に呼ぶ関数（中身を最新にする）
+//   hide    画面を離れるときに呼ぶ関数（GPSを止めるなどの後片付け）
 
 const ROUTES = {
   home:     { screen: 'home',     tab: 'home',     show: () => showHome() },
@@ -33,12 +35,23 @@ const ROUTES = {
   newcatch: { screen: 'catch',    tab: 'list',     show: (id) => showNewCatch(id) },
   // ピンの詳細
   pin:      { screen: 'pin',      tab: 'list',     show: (id) => showPin(id) },
+  // ピンへ戻るナビ（id はピンのID）
+  nav:      { screen: 'nav',      tab: 'list',     show: (id) => showNav(id), hide: () => hideNav() },
 };
+
+// いま表示している行き先
+let currentRoute = null;
 
 async function showScreen() {
   // 「#pin/abc123」→ name は「pin」、id は「abc123」
   const [name, id] = location.hash.replace('#', '').split('/');
   const route = ROUTES[name] || ROUTES.home;
+
+  // 前の画面の後片付けをする
+  if (currentRoute && currentRoute.hide) {
+    currentRoute.hide();
+  }
+  currentRoute = route;
 
   // 先に中身を用意する（古い内容が一瞬見えるのを防ぐ）
   if (route.show) {
@@ -69,6 +82,7 @@ initHome();
 initCatch();
 initPin();
 initList();
+initNav();
 
 window.addEventListener('hashchange', showScreen);
 showScreen();
