@@ -1,0 +1,189 @@
+/* ============================================================
+   釣果ピン の見た目
+   方針: 直射日光でも読める高コントラスト、濡れた手でも押せる大きなボタン
+   ============================================================ */
+
+/* 色と大きさをここにまとめる。変えたいときはここだけ直せばよい */
+:root {
+  --bg: #ffffff;          /* 背景 */
+  --text: #000000;        /* 文字 */
+  --main: #0b2a5b;        /* 主な色（濃い紺） */
+  --main-text: #ffffff;   /* 主な色の上の文字 */
+  --accent: #d93a00;      /* 目立たせる色（ピンのボタン） */
+  --line: #000000;        /* 枠線 */
+  --sub-bg: #f0f0f0;      /* カードの背景 */
+
+  --tabbar-height: 72px;  /* 下のタブの高さ */
+  --min-tap: 64px;        /* 押せる部品の最小の高さ */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* 文字を勝手に拡大縮小させない */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.5;
+  /* ダブルタップでの拡大を止めて、ボタンの反応を速くする */
+  touch-action: manipulation;
+}
+
+/* ---------- 画面 ---------- */
+
+.screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  /* iPhoneのノッチと、下のタブの分だけ余白をあける */
+  padding: calc(16px + env(safe-area-inset-top)) 16px
+           calc(var(--tabbar-height) + 24px + env(safe-area-inset-bottom));
+}
+
+/* hidden が付いた部品は必ず隠す。
+   !important が無いと、下の「display: flex」などの指定に負けて表示されてしまう */
+[hidden] {
+  display: none !important;
+}
+
+.screen-title {
+  margin: 0 0 16px;
+  font-size: 24px;
+  font-weight: 800;
+}
+
+/* ---------- ホーム: ピンを打つボタン ---------- */
+
+#screen-home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#screen-home .screen-title {
+  align-self: flex-start;
+}
+
+.pin-button {
+  /* 画面の幅と高さの小さい方に合わせた、大きな丸 */
+  width: min(78vw, 50vh);
+  aspect-ratio: 1;
+  margin: 24px 0;
+  border: 6px solid var(--line);
+  border-radius: 50%;
+  background: var(--accent);
+  color: #ffffff;
+  font: inherit;
+  font-size: clamp(36px, 11vw, 64px);
+  font-weight: 900;
+  line-height: 1.2;
+  cursor: pointer;
+  /* 長押しで文字が選択されないようにする */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 押している間は色を変えて、押せたことが分かるようにする */
+.pin-button:active {
+  background: var(--main);
+  transform: scale(0.97);
+}
+
+.status {
+  min-height: 2em;
+  margin: 0;
+  font-size: 20px;
+  text-align: center;
+}
+
+/* ---------- カード（設定画面など） ---------- */
+
+.card {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: var(--sub-bg);
+}
+
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.info dt {
+  font-weight: 800;
+}
+
+.info dd {
+  margin: 0;
+}
+
+.notes {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.notes li + li {
+  margin-top: 8px;
+}
+
+.placeholder {
+  margin-top: 48px;
+  text-align: center;
+}
+
+/* ---------- 下のタブ ---------- */
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  height: calc(var(--tabbar-height) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  border-top: 3px solid var(--line);
+  background: var(--bg);
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--min-tap);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 800;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab + .tab {
+  border-left: 3px solid var(--line);
+}
+
+/* いま開いている画面のタブ */
+.tab[aria-current="page"] {
+  background: var(--main);
+  color: var(--main-text);
+}

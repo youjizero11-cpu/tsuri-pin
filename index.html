@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <!-- スマホの画面幅に合わせる。viewport-fit=cover はiPhoneの画面の端まで使うための指定 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>釣果ピン</title>
+  <meta name="description" content="船釣り用の釣果ピン記録アプリ。圏外でも使えます。">
+
+  <!-- ホーム画面に追加するための設定 -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#0b2a5b">
+  <link rel="icon" href="./icons/icon-192.png">
+  <!-- iPhone用 -->
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="釣果ピン">
+
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+
+  <!-- ===== 画面1: ホーム ===== -->
+  <main id="screen-home" class="screen">
+    <h1 class="screen-title">釣果ピン</h1>
+
+    <button id="pin-button" class="pin-button" type="button">
+      ピンを<br>打つ
+    </button>
+
+    <!-- ボタンを押した結果やGPSの状態を出す場所 -->
+    <p id="home-status" class="status" role="status"></p>
+  </main>
+
+  <!-- ===== 画面3: ピン一覧 ===== -->
+  <main id="screen-list" class="screen" hidden>
+    <h1 class="screen-title">ピン一覧</h1>
+    <p class="placeholder">まだピンがありません。<br>（一覧は段階4で作ります）</p>
+  </main>
+
+  <!-- ===== 画面7: 設定・データ ===== -->
+  <main id="screen-settings" class="screen" hidden>
+    <h1 class="screen-title">設定・データ</h1>
+
+    <section class="card">
+      <h2>アプリの状態</h2>
+      <dl class="info">
+        <dt>版</dt>
+        <dd id="info-version">確認中…</dd>
+        <dt>オフライン準備</dt>
+        <dd id="info-offline">確認中…</dd>
+        <dt>通信</dt>
+        <dd id="info-network">確認中…</dd>
+      </dl>
+    </section>
+
+    <section class="card">
+      <h2>海に出る前に</h2>
+      <ul class="notes">
+        <li>電波のある場所で、一度このアプリを開いてください。</li>
+        <li>データはこの端末の中にしかありません。</li>
+        <li>iPhoneは「ホーム画面に追加」して使ってください。</li>
+      </ul>
+    </section>
+  </main>
+
+  <!-- ===== 下のタブ（どの画面でも表示） ===== -->
+  <nav class="tabbar" aria-label="メニュー">
+    <a class="tab" href="#home" data-screen="home">ホーム</a>
+    <a class="tab" href="#list" data-screen="list">一覧</a>
+    <a class="tab" href="#settings" data-screen="settings">設定</a>
+  </nav>
+
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

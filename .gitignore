@@ -1,0 +1,10 @@
+# アプリから書き出した釣果データ（釣り場の位置が入るので公開しない）
+tsuri-pin_*.csv
+tsuri-pin_*.json
+
+# 開発用ツールの設定
+.claude/
+
+# OSが作るファイル
+Thumbs.db
+.DS_Store
