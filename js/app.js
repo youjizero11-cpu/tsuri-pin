@@ -7,7 +7,8 @@
 
 import { initHome, showHome } from './screens/home.js';
 import { initCatch, showCatch, showNewCatch } from './screens/catch.js';
-import { showPin } from './screens/pin.js';
+import { initPin, showPin } from './screens/pin.js';
+import { initList, showList } from './screens/list.js';
 
 // ---------- 1. 画面の切り替え ----------
 // URLの末尾の「#home」「#pin/abc123」などを見て、対応する画面だけを表示する。
@@ -22,7 +23,7 @@ import { showPin } from './screens/pin.js';
 
 const ROUTES = {
   home:     { screen: 'home',     tab: 'home',     show: () => showHome() },
-  list:     { screen: 'list',     tab: 'list' },
+  list:     { screen: 'list',     tab: 'list',     show: () => showList() },
   settings: { screen: 'settings', tab: 'settings' },
   // ピンを打った直後の、かんたん入力
   after:    { screen: 'catch',    tab: 'home',     show: (id) => showCatch(id, { quick: true }) },
@@ -66,6 +67,8 @@ async function showScreen() {
 
 initHome();
 initCatch();
+initPin();
+initList();
 
 window.addEventListener('hashchange', showScreen);
 showScreen();

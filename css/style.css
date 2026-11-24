@@ -193,7 +193,19 @@ body {
   font-weight: 800;
 }
 
+/* 見出しのすぐ下に置く入力欄は、上の余白をなくす */
+.field-first {
+  margin-top: 0;
+}
+
+/* 小さめの注意書き */
+.small-note {
+  margin: 8px 0 0;
+  font-size: 16px;
+}
+
 .field input,
+.field select,
 .field textarea {
   display: block;
   width: 100%;

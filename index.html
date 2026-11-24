@@ -125,12 +125,45 @@
       <p id="pin-catch-empty">まだ釣果がありません。</p>
       <ul id="pin-catch-list" class="row-list"></ul>
     </section>
+
+    <section class="card">
+      <h2>ピンの名前とメモ</h2>
+      <label class="field field-first">
+        名前
+        <input id="pin-name" type="text" autocomplete="off" enterkeyhint="done">
+      </label>
+      <label class="field">
+        メモ
+        <textarea id="pin-memo" rows="3" placeholder="例：かけあがりの手前"></textarea>
+      </label>
+      <button id="pin-save" class="button" type="button">名前とメモを保存</button>
+      <p id="pin-save-status" class="button-note" role="status"></p>
+    </section>
+
+    <section class="card">
+      <h2>場所を確かめる</h2>
+      <!-- target="_blank" は「別の画面で開く」。rel="noopener" は安全のための決まり文句 -->
+      <a id="pin-map" class="button button-sub" href="#" target="_blank" rel="noopener">地図で開く（Googleマップ）</a>
+      <p id="pin-map-status" class="button-note" role="status"></p>
+      <p class="small-note">押すと、このピンの位置がGoogleに送られます。電波のある場所でだけ使えます。</p>
+    </section>
+
+    <button id="pin-delete" class="button button-danger" type="button">このピンを削除</button>
   </main>
 
   <!-- ===== 画面3: ピン一覧 ===== -->
   <main id="screen-list" class="screen" hidden>
     <h1 class="screen-title">ピン一覧</h1>
-    <p class="placeholder">まだピンがありません。<br>（一覧は段階4で作ります）</p>
+
+    <label class="field field-first">
+      魚種で絞り込む
+      <select id="list-filter"></select>
+    </label>
+
+    <p id="list-empty" class="placeholder" hidden></p>
+    <section id="list-card" class="card" hidden>
+      <ul id="list-rows" class="row-list"></ul>
+    </section>
   </main>
 
   <!-- ===== 画面7: 設定・データ ===== -->

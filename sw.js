@@ -11,7 +11,7 @@
 // ★ ファイルを追加したら、下の FILES にも追加する。
 // ============================================================
 
-const VERSION = 'v4';
+const VERSION = 'v5';
 const CACHE_NAME = 'tsuri-pin-' + VERSION;
 
 // 端末に保存するファイルの一覧
@@ -28,6 +28,7 @@ const FILES = [
   './js/screens/home.js',
   './js/screens/catch.js',
   './js/screens/pin.js',
+  './js/screens/list.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
