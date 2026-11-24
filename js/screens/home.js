@@ -192,6 +192,17 @@ async function showRecentPins() {
 export function initHome() {
   button.addEventListener('click', onPinButton);
   initPinMap();
+
+  // 「HONDEXの海図を開く」。圏外では開けないので、リンクを止めて理由を伝える
+  const depthStatus = document.getElementById('depth-status');
+  document.getElementById('depth-link').addEventListener('click', (event) => {
+    if (navigator.onLine) {
+      depthStatus.textContent = '';
+    } else {
+      event.preventDefault();
+      depthStatus.textContent = '圏外です。電波のある場所で使えます。';
+    }
+  });
 }
 
 // ホーム画面を表示するたび
