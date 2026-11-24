@@ -5,6 +5,8 @@
 //   3. 設定画面の「アプリの状態」の表示
 // ============================================================
 
+import { initHome } from './screens/home.js';
+
 // ---------- 1. 画面の切り替え ----------
 // URLの末尾の「#home」「#list」などを見て、対応する画面だけを表示する。
 // 下のタブは <a href="#list"> というただのリンクなので、
@@ -40,13 +42,17 @@ function showScreen() {
 window.addEventListener('hashchange', showScreen);
 showScreen();
 
-// ---------- ホーム: ピンを打つボタン（段階2で中身を作る） ----------
+// ---------- 各画面の準備 ----------
 
-const homeStatus = document.getElementById('home-status');
+initHome();
 
-document.getElementById('pin-button').addEventListener('click', () => {
-  homeStatus.textContent = 'ボタンは押せています。位置の保存は段階2で作ります。';
-});
+// ---------- データを勝手に消されないよう、ブラウザに頼む ----------
+// 端末の空き容量が減ると、ブラウザが保存データを消すことがある。
+// 「このアプリのデータは残して」と頼んでおく（聞いてもらえるかは端末しだい）。
+
+if (navigator.storage && navigator.storage.persist) {
+  navigator.storage.persist();
+}
 
 // ---------- 2. Service Worker の登録 ----------
 // Service Worker は、アプリのファイルを端末に保存して、
@@ -62,6 +68,15 @@ const useServiceWorker =
   (!isLocal || new URLSearchParams(location.search).has('sw'));
 
 if (useServiceWorker) {
+  // 新しい版に入れ替わったら、画面を自動で読み込み直して新しいファイルを使う。
+  // （初めて開いたときは入れ替わりではないので、読み込み直さない）
+  const hadOldVersion = Boolean(navigator.serviceWorker.controller);
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hadOldVersion) {
+      location.reload();
+    }
+  });
+
   navigator.serviceWorker.register('./sw.js')
     .then(() => navigator.serviceWorker.ready)
     .then(showAppInfo)

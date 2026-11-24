@@ -30,6 +30,14 @@
 
     <!-- ボタンを押した結果やGPSの状態を出す場所 -->
     <p id="home-status" class="status" role="status"></p>
+    <!-- 保存した緯度経度を出す場所 -->
+    <p id="home-detail" class="status-detail"></p>
+
+    <!-- 最近のピン（1件もないときは隠す） -->
+    <section id="recent" class="card recent" hidden>
+      <h2>最近のピン</h2>
+      <ul id="recent-list" class="pin-list"></ul>
+    </section>
   </main>
 
   <!-- ===== 画面3: ピン一覧 ===== -->

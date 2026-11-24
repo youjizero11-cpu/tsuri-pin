@@ -11,7 +11,7 @@
 // ★ ファイルを追加したら、下の FILES にも追加する。
 // ============================================================
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE_NAME = 'tsuri-pin-' + VERSION;
 
 // 端末に保存するファイルの一覧
@@ -21,6 +21,10 @@ const FILES = [
   './manifest.webmanifest',
   './css/style.css',
   './js/app.js',
+  './js/util.js',
+  './js/db.js',
+  './js/geo.js',
+  './js/screens/home.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
@@ -30,7 +34,11 @@ const FILES = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(FILES))
+      // cache: 'reload' は「ブラウザが覚えている古い分を使わず、必ず取り直す」指定。
+      // これが無いと、版を上げたのに古いファイルが保存されることがある。
+      .then((cache) => cache.addAll(
+        FILES.map((file) => new Request(file, { cache: 'reload' }))
+      ))
       // 新しい版を待たせず、すぐ有効にする
       .then(() => self.skipWaiting())
   );

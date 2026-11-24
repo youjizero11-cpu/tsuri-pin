@@ -99,11 +99,61 @@ body {
   transform: scale(0.97);
 }
 
+/* 測位中（押せない間）は色を変えて、待っていることが分かるようにする */
+.pin-button:disabled {
+  background: var(--main);
+  cursor: wait;
+}
+
 .status {
   min-height: 2em;
   margin: 0;
   font-size: 20px;
   text-align: center;
+}
+
+/* 注意してほしいメッセージ（精度が低い、位置が取れない など） */
+.status.is-warning {
+  padding: 8px 12px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: #ffe600;
+}
+
+.status-detail {
+  min-height: 1.5em;
+  margin: 8px 0 16px;
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* ---------- ピンのリスト ---------- */
+
+.recent {
+  align-self: stretch;
+}
+
+.pin-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pin-list li {
+  padding: 10px 0;
+}
+
+.pin-list li + li {
+  border-top: 2px solid var(--line);
+}
+
+.pin-name {
+  font-weight: 800;
+}
+
+.pin-coord {
+  font-size: 16px;
 }
 
 /* ---------- カード（設定画面など） ---------- */
