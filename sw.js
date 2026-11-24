@@ -11,7 +11,7 @@
 // ★ ファイルを追加したら、下の FILES にも追加する。
 // ============================================================
 
-const VERSION = 'v9';
+const VERSION = 'v10';
 const CACHE_NAME = 'tsuri-pin-' + VERSION;
 
 // 端末に保存するファイルの一覧

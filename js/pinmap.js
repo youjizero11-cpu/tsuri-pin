@@ -5,10 +5,12 @@
 //   日本全体 : 日本の輪郭の上に、ピンのある場所を印で示す。
 //              近いピンは1つの印にまとめ、件数を書く。印を押すと「海域」に切り替わる
 //   海域     : 押した印のピンだけを拡大して、位置関係を示す（北が上、縮尺つき）。
-//              「現在地を表示」を押すと、自分の位置と、いちばん近いピンが分かる
+//              「現在地を表示」を押すと、自分の位置と、いちばん近いピンが分かる。
+//              「Googleマップで見る」を押すと、本物の地図でその海域を開く
 //
 // 地図の画像は使わず、輪郭のデータ（japan.js）から自分で描く。
-// だから圏外でも動き、ピンの位置がどこかに送られることもない。
+// だから圏外でも動く。ピンの位置が外に送られるのは、
+// 「Googleマップで見る」を自分で押したときだけ。
 // ============================================================
 
 import { JAPAN_OUTLINE } from './japan.js';
@@ -23,16 +25,23 @@ const SIZE = 1000;
 const METERS_PER_DEG = 111320;
 
 // 日本全体を表示するときの範囲（九州〜北海道）。
-// 沖縄まで入れると本州が小さくなりすぎるので、ふだんは入れない。
-// この範囲の外にピンがあれば、そこまで自動で広げる（沖縄で打てば沖縄まで映る）
+// 沖縄まで入れると本州が小さくなりすぎるので、沖縄・奄美は左上の枠に分けて描く。
+// どちらの範囲にも入らないピン（小笠原など）があれば、そこまで自動で広げる
 const JAPAN_BOUNDS = { lonMin: 128.5, lonMax: 146.0, latMin: 30.5, latMax: 45.7 };
+// 左上の枠に描く範囲（沖縄・奄美）
+const OKINAWA_BOUNDS = { lonMin: 122.8, lonMax: 130.2, latMin: 24.0, latMax: 28.8 };
+// その枠を置く場所と大きさ（方眼紙の目盛りで）。日本海の、何も無いところに置く
+const OKINAWA_BOX = { x: 20, y: 20, size: 330 };
 // 日本全体の表示で、これより近い印は1つにまとめる（方眼紙の目盛りで）
 const CLUSTER_UNITS = 70;
 // 海域の表示で、これより狭くは拡大しない（メートル）。ピンが1つだけのときのため
 const MIN_AREA_M = 300;
-// 海域の表示で、表示範囲がこれより広いときだけ陸地を描く（メートル）。
-// 輪郭はおおまかなので、狭い範囲で描くと実際とずれて、かえって紛らわしい
-const LAND_MIN_WIDTH_M = 30000;
+// 海域の表示がこれより狭いとき（メートル）、左上に広域図を出す
+const INSET_BELOW_M = 100000;
+// 広域図に描く範囲の幅（メートル）
+const INSET_WIDTH_M = 250000;
+// Googleマップで開くときの、画面の幅の目安（ピクセル）。拡大の度合いを決めるのに使う
+const GOOGLE_MAP_SCREEN_PX = 400;
 
 const titleEl = document.getElementById('pinmap-title');
 const svg = document.getElementById('pinmap-svg');
@@ -42,6 +51,8 @@ const listEl = document.getElementById('pinmap-list');
 const locateButton = document.getElementById('pinmap-locate');
 const statusEl = document.getElementById('pinmap-status');
 const backButton = document.getElementById('pinmap-back');
+const googleLink = document.getElementById('pinmap-google');
+const googleStatus = document.getElementById('pinmap-google-status');
 
 // ---------- いまの状態 ----------
 
@@ -98,8 +109,11 @@ function makeProjection(bounds, pad, minSpanDeg = 0) {
   };
 }
 
-// 日本の輪郭を描く
-function drawLand(projection) {
+// 日本の輪郭を描く。
+// rough が true のときは、うすい色と点線で描く（拡大すると形のずれが目立つので、
+// 「おおよその形」だと見て分かるようにする）
+// target は描く先（省略すると地図の本体）
+function drawLand(projection, rough = false, target = svg) {
   let d = '';
   for (const ring of JAPAN_OUTLINE) {
     ring.forEach(([lon, lat], index) => {
@@ -108,7 +122,7 @@ function drawLand(projection) {
     });
     d += 'Z';
   }
-  svg.append(el('path', { class: 'map-land', d }));
+  target.append(el('path', { class: rough ? 'map-land map-land-rough' : 'map-land', d }));
 }
 
 // 押せる印を1つ描く。label は印の中の文字、onTap は押したときの処理
@@ -126,22 +140,54 @@ function drawMarker(x, y, label, onTap) {
 
 // ---------- 日本全体の表示 ----------
 
+// ピンが沖縄・奄美の範囲にあるか
+function isInOkinawa(pin) {
+  return pin.lon >= OKINAWA_BOUNDS.lonMin && pin.lon <= OKINAWA_BOUNDS.lonMax &&
+         pin.lat >= OKINAWA_BOUNDS.latMin && pin.lat <= OKINAWA_BOUNDS.latMax;
+}
+
 function renderJapan() {
   // ふつうは日本の範囲。日本の外にピンがあれば、そこまで広げる
+  // （沖縄・奄美のピンは左上の枠に描くので、ここでは数えない）
   const projection = makeProjection(
     boundsOf([
       { lon: JAPAN_BOUNDS.lonMin, lat: JAPAN_BOUNDS.latMin },
       { lon: JAPAN_BOUNDS.lonMax, lat: JAPAN_BOUNDS.latMax },
-      ...pins,
+      ...pins.filter((pin) => !isInOkinawa(pin)),
     ]),
     0.04
   );
   drawLand(projection);
 
+  // --- 沖縄・奄美の枠（左上） ---
+  // 紙の日本地図と同じやり方。本来の位置に描くと本州が小さくなるので、
+  // 空いている左上に、枠で囲んで描く
+  const okinawaProjection = makeProjection(OKINAWA_BOUNDS, 0.06);
+  const box = el('svg', {
+    class: 'map-inset', x: OKINAWA_BOX.x, y: OKINAWA_BOX.y,
+    width: OKINAWA_BOX.size, height: OKINAWA_BOX.size, viewBox: '0 0 1000 1000',
+  });
+  box.append(el('rect', { class: 'map-inset-sea', x: 0, y: 0, width: 1000, height: 1000 }));
+  drawLand(okinawaProjection, false, box);
+  box.append(el('rect', { class: 'map-inset-frame', x: 0, y: 0, width: 1000, height: 1000 }));
+  svg.append(box);
+  svg.append(el('text', {
+    class: 'map-label map-label-small',
+    x: OKINAWA_BOX.x + 12, y: OKINAWA_BOX.y + OKINAWA_BOX.size - 14,
+  }, '沖縄・奄美'));
+
+  // ピンを、地図の上の位置に変換する（沖縄・奄美のピンは枠の中の位置に）
+  const place = (pin) => {
+    if (!isInOkinawa(pin)) return projection.project(pin.lon, pin.lat);
+    const [x, y] = okinawaProjection.project(pin.lon, pin.lat);
+    const ratio = OKINAWA_BOX.size / SIZE;
+    return [OKINAWA_BOX.x + x * ratio, OKINAWA_BOX.y + y * ratio];
+  };
+
   // --- 近いピンを1つの印にまとめる ---
   const clusters = [];
   for (const pin of pins) {
-    const [x, y] = projection.project(pin.lon, pin.lat);
+    const [x, y] = place(pin);
     const near = clusters.find((c) => Math.hypot(c.x - x, c.y - y) <= CLUSTER_UNITS);
     if (near) {
       near.pins.push(pin);
@@ -196,8 +242,54 @@ function renderArea() {
   const projection = makeProjection(boundsOf(points), 0.18, MIN_AREA_M / METERS_PER_DEG);
   const widthM = SIZE * projection.metersPerUnit;
 
-  const showLand = widthM >= LAND_MIN_WIDTH_M;
-  if (showLand) drawLand(projection);
+  // 陸地を、うすい色で描く。どのあたりの海かを知るための目安。
+  // 輪郭はおおまかで、数kmずれることがある（ピンがせまい範囲に集まっていると、
+  // 陸地が画面に入らず、白いままのこともある）
+  drawLand(projection, true);
+
+  // --- 広域図（左上の小さな地図） ---
+  // 拡大していると陸地が画面に入らないので、まわり約250kmを小さく描いて、
+  // 「どのあたりの海か」が分かるようにする。オレンジの点が、この海域の場所
+  if (widthM < INSET_BELOW_M) {
+    const center = boundsOf(areaPins);
+    const centerLon = (center.lonMin + center.lonMax) / 2;
+    const centerLat = (center.latMin + center.latMax) / 2;
+    const insetProjection = makeProjection(
+      { lonMin: centerLon, lonMax: centerLon, latMin: centerLat, latMax: centerLat },
+      0,
+      INSET_WIDTH_M / METERS_PER_DEG
+    );
+    // 入れ子のSVG。中は 0〜1000 の方眼紙で、はみ出した分は自動で切り取られる
+    const inset = el('svg', {
+      class: 'map-inset', x: 20, y: 20, width: 300, height: 300, viewBox: '0 0 1000 1000',
+    });
+    inset.append(el('rect', { class: 'map-inset-sea', x: 0, y: 0, width: 1000, height: 1000 }));
+    drawLand(insetProjection, false, inset);
+    inset.append(el('circle', { class: 'map-inset-dot', cx: 500, cy: 500, r: 45 }));
+    inset.append(el('rect', { class: 'map-inset-frame', x: 0, y: 0, width: 1000, height: 1000 }));
+    svg.append(inset);
+  }
+
+  // --- 「Googleマップで見る」の行き先 ---
+  // ピンが1つなら、その位置に印を付けて開く。
+  // 2つ以上なら、この海域の真ん中を、同じくらいの広さで開く（印は付かない）
+  if (areaPins.length === 1) {
+    googleLink.href = 'https://www.google.com/maps/search/?api=1&query=' +
+      areaPins[0].lat + ',' + areaPins[0].lon;
+  } else {
+    const box = boundsOf(areaPins);
+    const lat = (box.latMin + box.latMax) / 2;
+    const lon = (box.lonMin + box.lonMax) / 2;
+    // Googleマップの拡大の度合い（数字が大きいほど拡大）。
+    // 画面の幅に、この海域がちょうど収まるくらいの値を計算する
+    const zoom = Math.log2(
+      GOOGLE_MAP_SCREEN_PX * 156543 * Math.cos(lat * Math.PI / 180) / widthM
+    );
+    googleLink.href = 'https://www.google.com/maps/@?api=1&map_action=map&center=' +
+      lat.toFixed(6) + ',' + lon.toFixed(6) +
+      '&zoom=' + Math.min(18, Math.max(3, Math.floor(zoom)));
+  }
+  googleStatus.textContent = '';
 
   // --- 北の印（右上） ---
   svg.append(el('path', { class: 'map-north', d: 'M930 40 L960 110 L930 95 L900 110 Z' }));
@@ -262,7 +354,8 @@ function renderArea() {
   noteEl.textContent =
     '北が上です。丸の番号は下の一覧と同じです。' +
     (myPosition ? 'ひし形が現在地です。' : '') +
-    (showLand ? '陸地の形はおおまかです。' : 'この縮尺では陸地は描きません。');
+    (widthM < INSET_BELOW_M ? '左上の小さな地図は、まわり約250kmです（オレンジの点がこの海域）。' : '') +
+    '灰色は陸地のおおよその形で、数kmずれることがあります。';
   areaBox.hidden = false;
 }
 
@@ -325,6 +418,13 @@ async function onLocate() {
 // 最初に1回だけ
 export function initPinMap() {
   locateButton.addEventListener('click', onLocate);
+  googleLink.addEventListener('click', (event) => {
+    // 圏外では地図を開けないので、リンクを止めて理由を伝える
+    if (!navigator.onLine) {
+      event.preventDefault();
+      googleStatus.textContent = '圏外です。電波のある場所で使えます。';
+    }
+  });
   backButton.addEventListener('click', () => {
     mode = 'japan';
     myPosition = null;

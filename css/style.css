@@ -162,6 +162,40 @@ body {
   stroke-linejoin: round;
 }
 
+/* 海域の表示での陸地。おおよその形だと分かるよう、うすい色と点線にする */
+.map-land-rough {
+  fill: #e4e4e4;
+  stroke: #666666;
+  stroke-width: 4;
+  stroke-dasharray: 14 10;
+}
+
+/* 広域図（海域の表示の左上に出す小さな地図）。
+   中は縮小して描かれるので、線は太めに指定する */
+.map-inset-sea {
+  fill: #ffffff;
+}
+
+.map-inset .map-land {
+  stroke-width: 8;
+}
+
+.map-inset-dot {
+  fill: var(--accent);
+  stroke: var(--line);
+  stroke-width: 12;
+}
+
+.map-inset-frame {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 24;
+}
+
+.map-label-small {
+  font-size: 34px;
+}
+
 .map-marker {
   cursor: pointer;
 }
