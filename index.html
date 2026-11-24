@@ -87,7 +87,13 @@
         <circle cx="50" cy="50" r="5"></circle>
       </svg>
       <!-- 地理院タイルを使うときの決まり（出典を書く） -->
-      <a class="plan-credit" href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地図：国土地理院</a>
+      <a id="plan-credit" class="plan-credit" href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地図：国土地理院</a>
+    </div>
+
+    <!-- 地図と、空から撮った写真を切り替える。いま出しているほうが濃い色になる -->
+    <div class="photo-buttons">
+      <button id="plan-layer-map" class="button" type="button">地図</button>
+      <button id="plan-layer-photo" class="button button-sub" type="button">写真</button>
     </div>
     <p id="plan-offline" class="status is-warning" hidden>圏外のため、地図は出ません。下の「数字で指定する」は使えます。</p>
 
@@ -118,6 +124,7 @@
       <ul class="notes">
         <li>目で合わせた場所なので、数十〜数百mずれることがあります。最後は現地で魚探を見て合わせてください。</li>
         <li>地図に海の深さは出ません。深さはHONDEXの海図などで見てください。</li>
+        <li>「写真」は空から撮った写真です。岸の近くでは、浅瀬や岩が色の違いで見えることがあります。撮った時期は場所によって違い、沖合は写真が無いか、粗くなります。</li>
         <li>地図を表示している間、見ている範囲が国土地理院のサーバーに伝わります。ピンや釣果は送られません。</li>
         <li>この地図は、船の航行のためのものではありません。</li>
       </ul>

@@ -40,6 +40,12 @@ const MIN_AREA_M = 300;
 const INSET_BELOW_M = 100000;
 // 広域図に描く範囲の幅（メートル）
 const INSET_WIDTH_M = 250000;
+// 海域の表示の背景に使う、国土地理院の地図（地理院タイル・標準地図）。
+// {z} が拡大の度合い、{x} {y} がタイル（小さな地図の画像）の番号
+const TILE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png';
+const TILE_PX = 256;
+const TILE_MIN_ZOOM = 5;
+const TILE_MAX_ZOOM = 18;
 // Googleマップで開くときの、画面の幅の目安（ピクセル）。拡大の度合いを決めるのに使う
 const GOOGLE_MAP_SCREEN_PX = 400;
 
@@ -107,6 +113,75 @@ function makeProjection(bounds, pad, minSpanDeg = 0) {
     // 方眼紙の1目盛りが何メートルか
     metersPerUnit: METERS_PER_DEG / scale,
   };
+}
+
+// 海域の表示で使う変換の道具。makeProjection と同じ使い方だが、
+// 国土地理院の地図（メルカトル図法）とぴったり重なる計算にしてある。
+//   minWidthM  これより狭い範囲は、この幅（メートル）まで広げて表示する
+// 中では、地球全体を 0〜1 の正方形にした位置（左上が 0,0）を使う。
+function makeMapProjection(bounds, pad, minWidthM) {
+  const toX = (lon) => (lon + 180) / 360;
+  const toY = (lat) => {
+    const rad = lat * Math.PI / 180;
+    return (1 - Math.asinh(Math.tan(rad)) / Math.PI) / 2;
+  };
+
+  const centerX = (toX(bounds.lonMin) + toX(bounds.lonMax)) / 2;
+  const centerY = (toY(bounds.latMin) + toY(bounds.latMax)) / 2;
+  const latCenter = (bounds.latMin + bounds.latMax) / 2;
+  // この緯度で、地球を東西にひと回りした長さ（メートル）
+  const aroundM = 360 * METERS_PER_DEG * Math.cos(latCenter * Math.PI / 180);
+
+  const needed = Math.max(
+    toX(bounds.lonMax) - toX(bounds.lonMin),
+    toY(bounds.latMin) - toY(bounds.latMax),
+    minWidthM / aroundM
+  );
+  // 画面に映る幅（0〜1 の正方形での長さ）
+  const span = needed / (1 - 2 * pad);
+  const scale = SIZE / span;
+
+  return {
+    project: (lon, lat) => [
+      SIZE / 2 + (toX(lon) - centerX) * scale,
+      SIZE / 2 + (toY(lat) - centerY) * scale,
+    ],
+    metersPerUnit: aroundM * span / SIZE,
+    // 地図の画像を並べるときに使う
+    centerX, centerY, span,
+  };
+}
+
+// 国土地理院の地図の画像（タイル）を、海域の表示の背景に並べる
+function drawTiles(projection) {
+  const { centerX, centerY, span } = projection;
+  // タイル1枚が、画面上でおよそ256ピクセルになる拡大の度合いを選ぶ
+  const screenPx = svg.clientWidth || 340;
+  const ideal = Math.log2(screenPx / (TILE_PX * span));
+  const zoom = Math.min(TILE_MAX_ZOOM, Math.max(TILE_MIN_ZOOM, Math.round(ideal)));
+  const count = 2 ** zoom;               // この拡大での、タイルの枚数（縦・横それぞれ）
+  const size = SIZE / (span * count);    // タイル1枚の大きさ（方眼紙の目盛りで）
+
+  const group = el('g', { class: 'map-tiles' });
+  const first = (c) => Math.max(0, Math.floor((c - span / 2) * count));
+  const last = (c) => Math.min(count - 1, Math.floor((c + span / 2) * count));
+  for (let tx = first(centerX); tx <= last(centerX); tx++) {
+    for (let ty = first(centerY); ty <= last(centerY); ty++) {
+      const image = el('image', {
+        href: TILE_URL.replace('{z}', zoom).replace('{x}', tx).replace('{y}', ty),
+        x: (SIZE / 2 + (tx / count - centerX) * SIZE / span).toFixed(2),
+        y: (SIZE / 2 + (ty / count - centerY) * SIZE / span).toFixed(2),
+        // すき間が見えないよう、ほんの少し大きめに描く
+        width: (size + 0.5).toFixed(2),
+        height: (size + 0.5).toFixed(2),
+        preserveAspectRatio: 'none',
+      });
+      // 沖合など、画像が無い場所は何も出さない（下の輪郭が見える）
+      image.addEventListener('error', () => image.remove());
+      group.append(image);
+    }
+  }
+  svg.append(group);
 }
 
 // 日本の輪郭を描く。
@@ -248,7 +323,7 @@ function renderArea() {
   const areaPins = pins.filter((pin) => areaPinIds.includes(pin.id));
   const points = myPosition ? [...areaPins, myPosition] : areaPins;
 
-  const projection = makeProjection(boundsOf(points), 0.18, MIN_AREA_M / METERS_PER_DEG);
+  const projection = makeMapProjection(boundsOf(points), 0.18, MIN_AREA_M);
   const widthM = SIZE * projection.metersPerUnit;
 
   // 陸地を、うすい色で描く。どのあたりの海かを知るための目安。
@@ -256,10 +331,21 @@ function renderArea() {
   // 陸地が画面に入らず、白いままのこともある）
   drawLand(projection, true);
 
+  // --- 本物の地図（国土地理院）を重ねる ---
+  // 電波のあるときだけ。圏外のとき、画像が取れなかったときは、上の輪郭がそのまま見える
+  const useTiles = navigator.onLine;
+  if (useTiles) {
+    drawTiles(projection);
+    svg.append(el('text', {
+      class: 'map-label map-label-small', x: 980, y: 985, 'text-anchor': 'end',
+    }, '地図：国土地理院'));
+  }
+
   // --- 広域図（左上の小さな地図） ---
   // 拡大していると陸地が画面に入らないので、まわり約250kmを小さく描いて、
-  // 「どのあたりの海か」が分かるようにする。オレンジの点が、この海域の場所
-  if (widthM < INSET_BELOW_M) {
+  // 「どのあたりの海か」が分かるようにする。オレンジの点が、この海域の場所。
+  // 本物の地図が出ているときは、地名で場所が分かるので出さない
+  if (!useTiles && widthM < INSET_BELOW_M) {
     const center = boundsOf(areaPins);
     const centerLon = (center.lonMin + center.lonMax) / 2;
     const centerLat = (center.latMin + center.latMax) / 2;
@@ -363,8 +449,11 @@ function renderArea() {
   noteEl.textContent =
     '北が上です。丸の番号は下の一覧と同じです。' +
     (myPosition ? 'ひし形が現在地です。' : '') +
-    (widthM < INSET_BELOW_M ? '左上の小さな地図は、まわり約250kmです（オレンジの点がこの海域）。' : '') +
-    '灰色は陸地のおおよその形で、数kmずれることがあります。' + plannedNote();
+    (useTiles
+      ? '地図は国土地理院のものです（圏外では、おおよその輪郭だけになります）。'
+      : (widthM < INSET_BELOW_M ? '左上の小さな地図は、まわり約250kmです（オレンジの点がこの海域）。' : '') +
+        '灰色は陸地のおおよその形で、数kmずれることがあります。') +
+    plannedNote();
   areaBox.hidden = false;
 }
 
@@ -427,6 +516,12 @@ async function onLocate() {
 // 最初に1回だけ
 export function initPinMap() {
   locateButton.addEventListener('click', onLocate);
+  // 電波がつながった・切れたとき、海域の表示を描き直す（地図と輪郭を切り替える）
+  const onNetworkChange = () => {
+    if (mode === 'area') render();
+  };
+  window.addEventListener('online', onNetworkChange);
+  window.addEventListener('offline', onNetworkChange);
   googleLink.addEventListener('click', (event) => {
     // 圏外では地図を開けないので、リンクを止めて理由を伝える
     if (!navigator.onLine) {

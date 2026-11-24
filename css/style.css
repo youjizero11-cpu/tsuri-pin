@@ -230,20 +230,29 @@ body {
   stroke-width: 6;
 }
 
+/* 北の印・縮尺・文字には白いふちを付ける。地図の上に重なっても読めるように */
 .map-north {
   fill: var(--line);
+  stroke: #ffffff;
+  stroke-width: 8;
+  paint-order: stroke;
 }
 
 .map-scale {
   fill: none;
   stroke: var(--line);
   stroke-width: 8;
+  filter: drop-shadow(0 0 3px #ffffff) drop-shadow(0 0 3px #ffffff);
 }
 
 .map-label {
   fill: var(--text);
   font-size: 44px;
   font-weight: 800;
+  stroke: #ffffff;
+  stroke-width: 10;
+  stroke-linejoin: round;
+  paint-order: stroke;
 }
 
 .pinmap-list {

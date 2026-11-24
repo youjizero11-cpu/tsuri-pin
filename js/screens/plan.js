@@ -23,8 +23,18 @@ const TILE = 256;
 // 拡大の度合い。数字が1つ増えると、2倍に拡大される。地理院タイル（標準地図）は 5〜18
 const MIN_ZOOM = 5;
 const MAX_ZOOM = 18;
-// タイルの置き場所。{z} が拡大の度合い、{x} {y} がタイルの番号
-const TILE_URL = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png';
+// タイルの置き場所。{z} が拡大の度合い、{x} {y} がタイルの番号。
+// 「地図」（標準地図）と「写真」（空から撮った写真）を切り替えられる
+const LAYERS = {
+  map: {
+    url: 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
+    credit: '地図：国土地理院',
+  },
+  photo: {
+    url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',
+    credit: '写真：国土地理院ほか',
+  },
+};
 // ピンが1つも無いときの最初の表示（日本の真ん中あたり）
 const START = { lat: 36.5, lon: 137.5, zoom: 5 };
 // ピンがあるとき、いちばん新しいピンのまわりを、この拡大で表示する
@@ -41,13 +51,20 @@ const input = document.getElementById('plan-input');
 const goButton = document.getElementById('plan-go');
 const saveButton = document.getElementById('plan-save');
 const statusEl = document.getElementById('plan-status');
+const creditEl = document.getElementById('plan-credit');
+const layerButtons = {
+  map: document.getElementById('plan-layer-map'),
+  photo: document.getElementById('plan-layer-photo'),
+};
 
 // ---------- いまの状態 ----------
 
 // 地図の真ん中（十字の位置）と、拡大の度合い
 let center = { lat: START.lat, lon: START.lon };
 let zoom = START.zoom;
-// いま並べているタイル。「拡大/x/y」→ 画像の部品
+// いま出しているのは 'map'（地図）か 'photo'（写真）か。画面を開き直しても覚えておく
+let layer = 'map';
+// いま並べているタイル。「種類/拡大/x/y」→ 画像の部品
 const tiles = new Map();
 
 // ---------- 緯度経度と、地図の上の位置の変換 ----------
@@ -92,7 +109,7 @@ function render() {
   for (let tx = Math.floor(left / TILE); tx <= Math.floor((left + width) / TILE); tx++) {
     for (let ty = Math.floor(top / TILE); ty <= Math.floor((top + height) / TILE); ty++) {
       if (tx < 0 || ty < 0 || tx > maxIndex || ty > maxIndex) continue;
-      const key = zoom + '/' + tx + '/' + ty;
+      const key = layer + '/' + zoom + '/' + tx + '/' + ty;
       needed.add(key);
 
       let img = tiles.get(key);
@@ -103,7 +120,7 @@ function render() {
         img.draggable = false;
         // 沖合など、地図の画像が無い場所もある。そのときは何も出さない（白いまま）
         img.onerror = () => { img.style.visibility = 'hidden'; };
-        img.src = TILE_URL.replace('{z}', zoom).replace('{x}', tx).replace('{y}', ty);
+        img.src = LAYERS[layer].url.replace('{z}', zoom).replace('{x}', tx).replace('{y}', ty);
         tiles.set(key, img);
         tilesEl.append(img);
       }
@@ -123,6 +140,20 @@ function render() {
   coordEl.textContent = formatCoord(center.lat, center.lon, getSetting('coordFormat'));
   zoomInButton.disabled = (zoom >= MAX_ZOOM);
   zoomOutButton.disabled = (zoom <= MIN_ZOOM);
+
+  // 「地図／写真」のボタン。いま出しているほうを濃い色にする
+  creditEl.textContent = LAYERS[layer].credit;
+  for (const [name, button] of Object.entries(layerButtons)) {
+    button.classList.toggle('button-sub', name !== layer);
+    button.setAttribute('aria-pressed', String(name === layer));
+  }
+}
+
+// 「地図」と「写真」を切り替える
+function setLayer(newLayer) {
+  if (newLayer === layer) return;
+  layer = newLayer;
+  render();
 }
 
 // 地図を、画面上のピクセルで動かす（指で引っぱった分だけ）
@@ -268,6 +299,8 @@ export function initPlan() {
   zoomInButton.addEventListener('click', () => setZoom(zoom + 1));
   zoomOutButton.addEventListener('click', () => setZoom(zoom - 1));
   locateButton.addEventListener('click', onLocate);
+  layerButtons.map.addEventListener('click', () => setLayer('map'));
+  layerButtons.photo.addEventListener('click', () => setLayer('photo'));
   goButton.addEventListener('click', onGo);
   saveButton.addEventListener('click', onSave);
 
