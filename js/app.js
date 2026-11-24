@@ -5,30 +5,53 @@
 //   3. 設定画面の「アプリの状態」の表示
 // ============================================================
 
-import { initHome } from './screens/home.js';
+import { initHome, showHome } from './screens/home.js';
+import { initCatch, showCatch, showNewCatch } from './screens/catch.js';
+import { showPin } from './screens/pin.js';
 
 // ---------- 1. 画面の切り替え ----------
-// URLの末尾の「#home」「#list」などを見て、対応する画面だけを表示する。
+// URLの末尾の「#home」「#pin/abc123」などを見て、対応する画面だけを表示する。
+// 「/」の後ろは、どのピン・どの釣果かを表すID。
 // 下のタブは <a href="#list"> というただのリンクなので、
 // 押すとURLが変わり、それをきっかけに画面が切り替わる。
+//
+// 行き先の一覧:
+//   screen  表示する画面（index.html の id="screen-〇〇"）
+//   tab     下のタブのどれを「いまここ」にするか
+//   show    画面を出す前に呼ぶ関数（中身を最新にする）
 
-const SCREENS = ['home', 'list', 'settings'];
+const ROUTES = {
+  home:     { screen: 'home',     tab: 'home',     show: () => showHome() },
+  list:     { screen: 'list',     tab: 'list' },
+  settings: { screen: 'settings', tab: 'settings' },
+  // ピンを打った直後の、かんたん入力
+  after:    { screen: 'catch',    tab: 'home',     show: (id) => showCatch(id, { quick: true }) },
+  // 釣果の編集
+  catch:    { screen: 'catch',    tab: 'list',     show: (id) => showCatch(id) },
+  // 釣果の追加（id はピンのID）
+  newcatch: { screen: 'catch',    tab: 'list',     show: (id) => showNewCatch(id) },
+  // ピンの詳細
+  pin:      { screen: 'pin',      tab: 'list',     show: (id) => showPin(id) },
+};
 
-function showScreen() {
-  // 「#list」→「list」。何もなければホーム
-  let name = location.hash.replace('#', '');
-  if (!SCREENS.includes(name)) {
-    name = 'home';
+async function showScreen() {
+  // 「#pin/abc123」→ name は「pin」、id は「abc123」
+  const [name, id] = location.hash.replace('#', '').split('/');
+  const route = ROUTES[name] || ROUTES.home;
+
+  // 先に中身を用意する（古い内容が一瞬見えるのを防ぐ）
+  if (route.show) {
+    await route.show(id);
   }
 
   // 該当する画面だけ表示し、他は隠す
-  for (const screen of SCREENS) {
-    document.getElementById('screen-' + screen).hidden = (screen !== name);
+  for (const screen of document.querySelectorAll('.screen')) {
+    screen.hidden = (screen.id !== 'screen-' + route.screen);
   }
 
   // 下のタブの「いまここ」の印を付け替える
   for (const tab of document.querySelectorAll('.tab')) {
-    if (tab.dataset.screen === name) {
+    if (tab.dataset.screen === route.tab) {
       tab.setAttribute('aria-current', 'page');
     } else {
       tab.removeAttribute('aria-current');
@@ -39,12 +62,13 @@ function showScreen() {
   window.scrollTo(0, 0);
 }
 
-window.addEventListener('hashchange', showScreen);
-showScreen();
-
 // ---------- 各画面の準備 ----------
 
 initHome();
+initCatch();
+
+window.addEventListener('hashchange', showScreen);
+showScreen();
 
 // ---------- データを勝手に消されないよう、ブラウザに頼む ----------
 // 端末の空き容量が減ると、ブラウザが保存データを消すことがある。

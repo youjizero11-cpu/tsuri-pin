@@ -91,6 +91,26 @@ export function getBestPosition({
   });
 }
 
+// これより誤差が大きいときは「精度が低い」と知らせる（メートル）
+export const LOW_ACCURACY_M = 30;
+
+// ---------- 2点間の距離 ----------
+
+// 2つの緯度経度のあいだの距離をメートルで返す。
+// 地球を球とみなして計算する「ハーバーサインの公式」。通信は使わない。
+export function distanceM(lat1, lon1, lat2, lon2) {
+  const EARTH_RADIUS_M = 6371000;
+  const toRad = (deg) => deg * Math.PI / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+
+  return 2 * EARTH_RADIUS_M * Math.asin(Math.sqrt(a));
+}
+
 // ---------- 緯度経度の表示 ----------
 
 // 1つの値を「34°12.345′N」の形（度分）にする

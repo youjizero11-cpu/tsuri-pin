@@ -128,37 +128,112 @@ body {
   text-align: center;
 }
 
-/* ---------- ピンのリスト ---------- */
+/* ---------- 近くのピンがあるときの選択肢 ---------- */
+
+.nearby {
+  align-self: stretch;
+  margin: 24px 0;
+}
+
+/* ---------- 押せる行のリスト（最近のピン、釣果の履歴） ---------- */
 
 .recent {
   align-self: stretch;
+  margin-top: 16px;
 }
 
-.pin-list {
+.row-list {
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.pin-list li {
-  padding: 10px 0;
-}
-
-.pin-list li + li {
+.row-list li + li {
   border-top: 2px solid var(--line);
 }
 
-.pin-name {
+/* 行全体がリンク。右端の「›」で、押せることを示す */
+.row-link {
+  position: relative;
+  display: block;
+  min-height: var(--min-tap);
+  padding: 10px 28px 10px 0;
+  color: var(--text);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.row-link::after {
+  content: "›";
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 28px;
   font-weight: 800;
 }
 
-.pin-coord {
+.row-link:active {
+  background: #d0d0d0;
+}
+
+.row-main {
+  font-weight: 800;
+}
+
+.row-sub {
   font-size: 16px;
+}
+
+/* ---------- 入力欄 ---------- */
+
+.field {
+  display: block;
+  margin-top: 16px;
+  font-weight: 800;
+}
+
+.field input,
+.field textarea {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  /* 16px より小さいと、iPhoneが入力時に画面を勝手に拡大する */
+  font-size: 20px;
+}
+
+/* ---------- 写真 ---------- */
+
+.photo-preview {
+  display: block;
+  width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: var(--sub-bg);
+}
+
+.photo-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.photo-buttons .button {
+  flex: 1;
 }
 
 /* ---------- カード（設定画面など） ---------- */
 
 .card {
+  margin-top: 16px;
   margin-bottom: 16px;
   padding: 16px;
   border: 3px solid var(--line);
@@ -206,6 +281,44 @@ body {
 
 .button:active {
   background: var(--accent);
+}
+
+/* <a> や <label> をボタンの見た目にしたとき、文字を真ん中に置く */
+a.button,
+label.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* いちばん大事なボタンは背を高くする */
+.button-tall {
+  min-height: 88px;
+  font-size: 24px;
+}
+
+/* 控えめなボタン（白地） */
+.button-sub {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.button-sub:active {
+  background: #d0d0d0;
+}
+
+/* 削除など、取り返しのつかないボタン（白地に赤） */
+.button-danger {
+  margin-top: 40px;
+  border-color: var(--accent);
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.button-danger:active {
+  background: var(--accent);
+  color: #ffffff;
 }
 
 /* ボタンの下の説明や結果 */

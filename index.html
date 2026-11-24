@@ -28,15 +28,102 @@
       ピンを<br>打つ
     </button>
 
-    <!-- ボタンを押した結果やGPSの状態を出す場所 -->
+    <!-- 近くに既存のピンがあるときだけ、丸ボタンの代わりに出す選択肢 -->
+    <section id="nearby" class="nearby" hidden>
+      <button id="nearby-add" class="button button-tall" type="button"></button>
+      <p id="nearby-note" class="button-note"></p>
+      <button id="nearby-new" class="button button-sub button-tall" type="button">新しいピンにする</button>
+    </section>
+
+    <!-- GPSの状態やエラーを出す場所 -->
     <p id="home-status" class="status" role="status"></p>
-    <!-- 保存した緯度経度を出す場所 -->
-    <p id="home-detail" class="status-detail"></p>
 
     <!-- 最近のピン（1件もないときは隠す） -->
     <section id="recent" class="card recent" hidden>
       <h2>最近のピン</h2>
-      <ul id="recent-list" class="pin-list"></ul>
+      <ul id="recent-list" class="row-list"></ul>
+    </section>
+  </main>
+
+  <!-- ===== 画面2・5: 釣果の入力（ピン打ち直後のかんたん入力 / 編集 / 追加で共用） ===== -->
+  <main id="screen-catch" class="screen" hidden>
+    <h1 id="catch-title" class="screen-title">釣果を入力</h1>
+    <p id="catch-message" class="status" role="status"></p>
+    <p id="catch-sub" class="status-detail"></p>
+
+    <!-- 写真 -->
+    <img id="catch-photo-preview" class="photo-preview" alt="釣果の写真" hidden>
+    <div class="photo-buttons">
+      <!-- label を押すと、中の input（見えない）が反応してカメラが開く -->
+      <label class="button">
+        写真を撮る
+        <input id="catch-photo-camera" type="file" accept="image/*" capture="environment" hidden>
+      </label>
+      <label class="button button-sub">
+        写真を選ぶ
+        <input id="catch-photo-library" type="file" accept="image/*" hidden>
+      </label>
+    </div>
+    <button id="catch-photo-remove" class="button button-sub" type="button" hidden>写真を消す</button>
+    <p id="catch-photo-status" class="button-note" role="status"></p>
+
+    <!-- いつも見せる項目 -->
+    <label class="field">
+      魚種
+      <input id="catch-species" type="text" list="species-options" autocomplete="off" enterkeyhint="done">
+    </label>
+    <datalist id="species-options"></datalist>
+
+    <label class="field">
+      匹数
+      <input id="catch-count" type="number" inputmode="numeric" min="0" step="1">
+    </label>
+
+    <!-- くわしい項目（ピン打ち直後は隠しておく） -->
+    <div id="catch-details">
+      <label class="field">
+        サイズ（cm）
+        <input id="catch-size" type="number" inputmode="decimal" min="0" step="0.1">
+      </label>
+      <label class="field">
+        水深（m）
+        <input id="catch-depth" type="number" inputmode="decimal" min="0" step="0.1">
+      </label>
+      <label class="field">
+        タナ
+        <input id="catch-tana" type="text" autocomplete="off" placeholder="例：底から3m">
+      </label>
+      <label class="field">
+        仕掛け / エサ
+        <input id="catch-rig" type="text" autocomplete="off">
+      </label>
+      <label class="field">
+        メモ
+        <textarea id="catch-memo" rows="3"></textarea>
+      </label>
+      <label class="field">
+        釣れた日時
+        <input id="catch-date" type="datetime-local">
+      </label>
+    </div>
+
+    <button id="catch-save" class="button button-tall" type="button">保存</button>
+    <button id="catch-more" class="button button-sub" type="button">くわしく入力</button>
+    <button id="catch-cancel" class="button button-sub" type="button">戻る</button>
+    <button id="catch-delete" class="button button-danger" type="button">この釣果を削除</button>
+  </main>
+
+  <!-- ===== 画面4: ピンの詳細 ===== -->
+  <main id="screen-pin" class="screen" hidden>
+    <h1 id="pin-title" class="screen-title"></h1>
+    <p id="pin-coord" class="status-detail"></p>
+
+    <a id="pin-add-catch" class="button button-tall" href="#home">釣果を追加</a>
+
+    <section class="card">
+      <h2>このピンの釣果</h2>
+      <p id="pin-catch-empty">まだ釣果がありません。</p>
+      <ul id="pin-catch-list" class="row-list"></ul>
     </section>
   </main>
 

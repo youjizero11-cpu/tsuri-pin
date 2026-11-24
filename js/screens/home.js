@@ -1,23 +1,86 @@
 // ============================================================
 // home.js — ホーム画面
 //   ・「ピンを打つ」ボタンを押したら、現在地を取って保存する
+//   ・近くに既存のピンがあれば、そこに追加するかを聞く
 //   ・最近のピンを3件表示する
 // ============================================================
 
-import { getBestPosition, formatCoord } from '../geo.js';
-import { saveAll, getPinsNewestFirst } from '../db.js';
+import { getBestPosition, formatCoord, distanceM } from '../geo.js';
+import { saveAll, getAll, getPinsNewestFirst } from '../db.js';
 import { newId, toIsoLocal, formatDateTime } from '../util.js';
+import { createEmptyCatch } from './catch.js';
 
-// これより誤差が大きいときは「精度が低い」と知らせる（メートル）
-const LOW_ACCURACY_M = 30;
+// この距離より近くに既存のピンがあれば「追加しますか」と聞く（メートル）
+const NEARBY_M = 50;
+// 何も押さなかったとき、自動で「追加」を選ぶまでの秒数
+const AUTO_ADD_SECONDS = 5;
 
 const button = document.getElementById('pin-button');
 const statusEl = document.getElementById('home-status');
-const detailEl = document.getElementById('home-detail');
 const recentSection = document.getElementById('recent');
 const recentList = document.getElementById('recent-list');
 
+const nearbyPanel = document.getElementById('nearby');
+const nearbyAddButton = document.getElementById('nearby-add');
+const nearbyNewButton = document.getElementById('nearby-new');
+const nearbyNote = document.getElementById('nearby-note');
+
 const BUTTON_LABEL = 'ピンを<br>打つ';
+
+// ---------- 近くのピンを探す ----------
+
+// いちばん近いピンと、そこまでの距離を返す。NEARBY_M より遠ければ null
+async function findNearbyPin(lat, lon) {
+  let nearest = null;
+  for (const pin of await getAll('pins')) {
+    const distance = distanceM(lat, lon, pin.lat, pin.lon);
+    if (distance <= NEARBY_M && (!nearest || distance < nearest.distance)) {
+      nearest = { pin, distance };
+    }
+  }
+  return nearest;
+}
+
+// 「このピンに追加 / 新しいピン」を聞く。答えは 'add' か 'new'。
+// 5秒何も押さなければ 'add' にする（海上で手が離せないときのため）。
+function askAddOrNew(nearby) {
+  return new Promise((resolve) => {
+    let secondsLeft = AUTO_ADD_SECONDS;
+
+    nearbyAddButton.textContent =
+      '「' + nearby.pin.name + '」に追加（' + Math.round(nearby.distance) + 'm先）';
+
+    function showCountdown() {
+      nearbyNote.textContent = secondsLeft + '秒後に自動で追加します';
+    }
+
+    function finish(answer) {
+      clearInterval(timer);
+      nearbyPanel.hidden = true;
+      button.hidden = false;
+      nearbyAddButton.onclick = null;
+      nearbyNewButton.onclick = null;
+      resolve(answer);
+    }
+
+    const timer = setInterval(() => {
+      secondsLeft -= 1;
+      if (secondsLeft <= 0) {
+        finish('add');
+      } else {
+        showCountdown();
+      }
+    }, 1000);
+
+    nearbyAddButton.onclick = () => finish('add');
+    nearbyNewButton.onclick = () => finish('new');
+
+    // 大きな丸ボタンを隠して、その場所に選択肢を出す
+    showCountdown();
+    button.hidden = true;
+    nearbyPanel.hidden = false;
+  });
+}
 
 // ---------- ピンを打つ ----------
 
@@ -30,7 +93,6 @@ async function onPinButton() {
   button.textContent = '測位中';
   statusEl.textContent = '位置を調べています…';
   statusEl.classList.remove('is-warning');
-  detailEl.textContent = '';
 
   try {
     const position = await getBestPosition({
@@ -39,49 +101,43 @@ async function onPinButton() {
       },
     });
 
-    // 保存するデータを作る
-    const pin = {
-      id: newId(),
-      name: 'ピン ' + formatDateTime(pressedAt),
-      lat: position.lat,
-      lon: position.lon,
-      accuracyM: Math.round(position.accuracyM),
-      memo: '',
-      createdAt: pressedAt,
-      updatedAt: pressedAt,
-    };
-
-    // ピンと一緒に、空の釣果を1件作っておく（中身はあとで入力する）
-    const emptyCatch = {
-      id: newId(),
-      pinId: pin.id,
-      caughtAt: pressedAt,
-      species: '',
-      sizeCm: null,
-      count: null,
-      depthM: null,
-      tana: '',
-      rig: '',
-      memo: '',
-      hasPhoto: false,
-      updatedAt: pressedAt,
-    };
-
-    await saveAll([
-      { store: 'pins', value: pin },
-      { store: 'catches', value: emptyCatch },
-    ]);
-
-    // 結果を表示する
-    if (pin.accuracyM > LOW_ACCURACY_M) {
-      statusEl.textContent = '保存しました（精度が低いです ±' + pin.accuracyM + 'm）';
-      statusEl.classList.add('is-warning');
-    } else {
-      statusEl.textContent = '保存しました（精度 ±' + pin.accuracyM + 'm）';
+    // 近くに既存のピンがあれば、そこに追加するかを聞く
+    let targetPin = null;
+    const nearby = await findNearbyPin(position.lat, position.lon);
+    if (nearby) {
+      statusEl.textContent = '近くにピンがあります';
+      const answer = await askAddOrNew(nearby);
+      if (answer === 'add') {
+        targetPin = nearby.pin;
+      }
     }
-    detailEl.textContent = formatCoord(pin.lat, pin.lon);
 
-    await showRecentPins();
+    const entries = [];
+
+    // 追加先がなければ、新しいピンを作る
+    if (!targetPin) {
+      targetPin = {
+        id: newId(),
+        name: 'ピン ' + formatDateTime(pressedAt),
+        lat: position.lat,
+        lon: position.lon,
+        accuracyM: Math.round(position.accuracyM),
+        memo: '',
+        createdAt: pressedAt,
+        updatedAt: pressedAt,
+      };
+      entries.push({ store: 'pins', value: targetPin });
+    }
+
+    // 空の釣果を1件作る（中身は次の画面か、あとで入力する）
+    const newCatch = createEmptyCatch(targetPin.id, pressedAt);
+    entries.push({ store: 'catches', value: newCatch });
+
+    await saveAll(entries);
+
+    // 保存できたので、かんたん入力の画面へ進む
+    statusEl.textContent = '';
+    location.hash = '#after/' + newCatch.id;
   } catch (error) {
     statusEl.textContent = error.message;
     statusEl.classList.add('is-warning');
@@ -93,31 +149,42 @@ async function onPinButton() {
 
 // ---------- 最近のピン ----------
 
-export async function showRecentPins() {
+async function showRecentPins() {
   const pins = (await getPinsNewestFirst()).slice(0, 3);
 
   recentSection.hidden = (pins.length === 0);
   recentList.textContent = '';
 
   for (const pin of pins) {
-    const item = document.createElement('li');
+    // 行全体をリンクにして、押すとピンの詳細が開くようにする
+    const link = document.createElement('a');
+    link.className = 'row-link';
+    link.href = '#pin/' + pin.id;
 
     const name = document.createElement('div');
-    name.className = 'pin-name';
+    name.className = 'row-main';
     name.textContent = pin.name;
 
     const coord = document.createElement('div');
-    coord.className = 'pin-coord';
+    coord.className = 'row-sub';
     coord.textContent = formatCoord(pin.lat, pin.lon) + '（±' + pin.accuracyM + 'm）';
 
-    item.append(name, coord);
+    link.append(name, coord);
+
+    const item = document.createElement('li');
+    item.append(link);
     recentList.append(item);
   }
 }
 
-// ---------- 最初の準備（app.js から1回だけ呼ばれる） ----------
+// ---------- app.js から呼ばれるもの ----------
 
+// 最初に1回だけ
 export function initHome() {
   button.addEventListener('click', onPinButton);
+}
+
+// ホーム画面を表示するたび
+export function showHome() {
   showRecentPins();
 }
