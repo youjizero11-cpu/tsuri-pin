@@ -11,6 +11,7 @@ import { initPin, showPin } from './screens/pin.js';
 import { initList, showList } from './screens/list.js';
 import { initNav, showNav, hideNav } from './screens/nav.js';
 import { initSettings, showSettings } from './screens/settings.js';
+import { initPlan, showPlan } from './screens/plan.js';
 import { loadSettings } from './settings-store.js';
 
 // ---------- 1. 画面の切り替え ----------
@@ -39,6 +40,8 @@ const ROUTES = {
   pin:      { screen: 'pin',      tab: 'list',     show: (id) => showPin(id) },
   // ピンへ戻るナビ（id はピンのID）
   nav:      { screen: 'nav',      tab: 'list',     show: (id) => showNav(id), hide: () => hideNav() },
+  // 行きたい場所を先に登録する
+  plan:     { screen: 'plan',     tab: 'home',     show: () => showPlan() },
 };
 
 // ---------- うまく動かなかったときのお知らせ ----------
@@ -112,6 +115,7 @@ initPin();
 initList();
 initNav();
 initSettings();
+initPlan();
 
 window.addEventListener('hashchange', showScreen);
 // 設定（距離の単位など）を読み込んでから、最初の画面を出す

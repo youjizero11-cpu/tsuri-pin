@@ -65,11 +65,65 @@
     <!-- 釣り場を探すための、外のサイトへのリンク。
          HONDEXの海図（海の深さ）をブラウザで開くだけで、アプリとデータのやり取りはしない -->
     <section class="card depth">
-      <h2>海の深さを見る</h2>
-      <a id="depth-link" class="button button-sub" href="https://map.hondex.co.jp/" target="_blank" rel="noopener">HONDEXの海図を開く</a>
+      <h2>行く前に場所を決める</h2>
+      <a id="depth-link" class="button button-sub" href="https://map.hondex.co.jp/" target="_blank" rel="noopener">HONDEXの海図を開く（海の深さ）</a>
       <p id="depth-status" class="button-note" role="status"></p>
       <p class="small-note">本多電子（HONDEX）のサイトを、ブラウザで開きます。電波のある場所でだけ使えます。このアプリのピンや釣果は送られません。</p>
+      <a class="button" href="#plan">行きたい場所をピンにする</a>
+      <p class="small-note">地図や緯度・経度で場所を決めて、先にピンを作ります。海の上で「ここへ戻る」が使えます。</p>
     </section>
+  </main>
+
+  <!-- ===== 行きたい場所を先に登録する（中身は js/screens/plan.js） ===== -->
+  <main id="screen-plan" class="screen" hidden>
+    <h1 class="screen-title">行きたい場所をピンにする</h1>
+    <p class="small-note">地図を指で動かして、真ん中の十字を行きたい場所に合わせます。</p>
+
+    <!-- 地図。タイル（小さな地図の画像）を並べ、真ん中に十字を重ねる -->
+    <div id="plan-map" class="plan-map">
+      <div id="plan-tiles"></div>
+      <svg class="plan-cross" viewBox="0 0 100 100" aria-hidden="true">
+        <path d="M50 8 V38 M50 62 V92 M8 50 H38 M62 50 H92"></path>
+        <circle cx="50" cy="50" r="5"></circle>
+      </svg>
+      <!-- 地理院タイルを使うときの決まり（出典を書く） -->
+      <a class="plan-credit" href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地図：国土地理院</a>
+    </div>
+    <p id="plan-offline" class="status is-warning" hidden>圏外のため、地図は出ません。下の「数字で指定する」は使えます。</p>
+
+    <p class="plan-coord-label">十字の場所</p>
+    <p id="plan-coord" class="status-detail"></p>
+
+    <div class="photo-buttons">
+      <button id="plan-zoom-out" class="button button-sub" type="button" aria-label="縮小">−　広く</button>
+      <button id="plan-zoom-in" class="button button-sub" type="button" aria-label="拡大">＋　くわしく</button>
+    </div>
+    <button id="plan-locate" class="button button-sub" type="button">現在地へ移動</button>
+
+    <button id="plan-save" class="button button-tall" type="button">この場所をピンにする</button>
+    <p id="plan-status" class="button-note" role="status"></p>
+
+    <section class="card">
+      <h2>数字で指定する</h2>
+      <label class="field field-first">
+        緯度, 経度
+        <input id="plan-input" type="text" autocomplete="off" enterkeyhint="done" placeholder="33.6586, 130.2368">
+      </label>
+      <button id="plan-go" class="button button-sub" type="button">この数字の場所へ移動</button>
+      <p class="small-note">Googleマップでコピーした数字（33.6586, 130.2368）や、度分の形（33°39.512′N 130°14.208′E）を入力できます。</p>
+    </section>
+
+    <section class="card">
+      <h2>知っておくこと</h2>
+      <ul class="notes">
+        <li>目で合わせた場所なので、数十〜数百mずれることがあります。最後は現地で魚探を見て合わせてください。</li>
+        <li>地図に海の深さは出ません。深さはHONDEXの海図などで見てください。</li>
+        <li>地図を表示している間、見ている範囲が国土地理院のサーバーに伝わります。ピンや釣果は送られません。</li>
+        <li>この地図は、船の航行のためのものではありません。</li>
+      </ul>
+    </section>
+
+    <a class="button button-sub" href="#home">やめて戻る</a>
   </main>
 
   <!-- ===== 画面2・5: 釣果の入力（ピン打ち直後のかんたん入力 / 編集 / 追加で共用） ===== -->

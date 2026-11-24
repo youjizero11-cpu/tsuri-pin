@@ -11,7 +11,7 @@
 // ★ ファイルを追加したら、下の FILES にも追加する。
 // ============================================================
 
-const VERSION = 'v11';
+const VERSION = 'v12';
 const CACHE_NAME = 'tsuri-pin-' + VERSION;
 
 // 端末に保存するファイルの一覧
@@ -36,6 +36,7 @@ const FILES = [
   './js/screens/catch.js',
   './js/screens/pin.js',
   './js/screens/list.js',
+  './js/screens/plan.js',
   './icons/icon-192.png',
   './icons/icon-512.png',
   './icons/apple-touch-icon.png',
@@ -72,6 +73,11 @@ self.addEventListener('activate', (event) => {
 // 3. ファイルの要求: 保存分があればそれを渡す。なければインターネットへ取りに行く
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
+    return;
+  }
+  // よそのサイトのファイル（国土地理院の地図の画像など）には手を出さず、
+  // ブラウザにそのまま取りに行かせる
+  if (new URL(event.request.url).origin !== self.location.origin) {
     return;
   }
 

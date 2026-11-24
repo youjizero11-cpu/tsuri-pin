@@ -82,7 +82,10 @@ export async function showList() {
     const speciesText = summary.species.size > 0
       ? [...summary.species].join('、')
       : '魚種未入力';
-    fish.textContent = speciesText + '（釣果' + summary.catchCount + '件）';
+    // 予定のピン（行く前に登録した場所）で、まだ釣果が無いときは、そう書く
+    fish.textContent = (summary.pin.planned && summary.catchCount === 0)
+      ? '予定の場所（まだ釣果なし）'
+      : speciesText + '（釣果' + summary.catchCount + '件）';
 
     const date = document.createElement('div');
     date.className = 'row-sub';

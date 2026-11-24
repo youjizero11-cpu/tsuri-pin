@@ -178,3 +178,46 @@ export function formatCoord(lat, lon, format = 'dm') {
   }
   return toDegMin(lat, 'N', 'S') + ' ' + toDegMin(lon, 'E', 'W');
 }
+
+// ピンの場所を画面に出す形にする。後ろに、位置の確かさを付ける。
+//   ふつうのピン : 34°12.345′N 135°07.407′E（±5m）   … GPSで測った位置
+//   予定のピン   : 34°12.345′N 135°07.407′E（予定の場所） … 地図や数字で決めた位置
+export function formatPinCoord(pin, format = 'dm') {
+  const tail = pin.planned ? '（予定の場所）' : '（±' + pin.accuracyM + 'm）';
+  return formatCoord(pin.lat, pin.lon, format) + tail;
+}
+
+// 入力された文字から、緯度と経度を読み取る。読み取れなければ null。
+// 次の2つの書き方に対応する（記号や空白は多少違っていてもよい）
+//   10進  : 33.6586, 130.2368          （Googleマップでコピーした形）
+//   度分  : 33°39.512′N 130°14.208′E   （このアプリや船のGPS機器の形）
+// 返す値: { lat, lon }
+export function parseCoord(text) {
+  // 全角の数字や記号を半角にそろえる
+  const normalized = String(text)
+    .replace(/[０-９．－]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+    .replace(/、/g, ',');
+  // 文字の中から数字だけを順に取り出す
+  const numbers = (normalized.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
+
+  let lat;
+  let lon;
+  if (numbers.length === 2) {
+    [lat, lon] = numbers;
+  } else if (numbers.length === 4) {
+    // 度と分。分は 60 で割って度に直す
+    const [latDeg, latMin, lonDeg, lonMin] = numbers;
+    if (latMin >= 60 || lonMin >= 60 || latMin < 0 || lonMin < 0) return null;
+    lat = Math.abs(latDeg) + latMin / 60;
+    lon = Math.abs(lonDeg) + lonMin / 60;
+    // 南緯（S）・西経（W）ならマイナスにする
+    if (/S/i.test(normalized) || latDeg < 0) lat = -lat;
+    if (/W/i.test(normalized) || lonDeg < 0) lon = -lon;
+  } else {
+    return null;
+  }
+
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
+  if (Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+  return { lat, lon };
+}

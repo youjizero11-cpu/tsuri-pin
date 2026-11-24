@@ -126,16 +126,24 @@ function drawLand(projection, rough = false, target = svg) {
 }
 
 // 押せる印を1つ描く。label は印の中の文字、onTap は押したときの処理
-function drawMarker(x, y, label, onTap) {
+// planned が true なら、予定のピンの色（紺）で描く
+function drawMarker(x, y, label, onTap, planned = false) {
   const group = el('g', { class: 'map-marker' });
   // 見えない大きな丸。指で押しやすいよう、当たり判定を広げる
   group.append(el('circle', { class: 'map-tap', cx: x, cy: y, r: 70 }));
-  group.append(el('circle', { class: 'map-pin', cx: x, cy: y, r: 36 }));
+  group.append(el('circle', {
+    class: planned ? 'map-pin map-pin-planned' : 'map-pin', cx: x, cy: y, r: 36,
+  }));
   if (label !== '') {
     group.append(el('text', { class: 'map-pin-text', x, y }, label));
   }
   group.addEventListener('click', onTap);
   svg.append(group);
+}
+
+// 予定のピンが1つでもあれば、色の意味を説明する文を返す
+function plannedNote() {
+  return pins.some((pin) => pin.planned) ? '紺色の印は、行く前に登録した予定の場所です。' : '';
 }
 
 // ---------- 日本全体の表示 ----------
@@ -205,13 +213,14 @@ function renderJapan() {
       myPosition = null;
       statusEl.textContent = '';
       render();
-    });
+    // まとめた中身が全部「予定のピン」のときだけ、紺色にする
+    }, cluster.pins.every((pin) => pin.planned));
   }
 
   titleEl.textContent = 'ピンの地図';
   noteEl.textContent = (pins.length === 0)
     ? 'ピンを打つと、ここに印が出ます。'
-    : '印を押すと、その海域を拡大します。印の数字は、まとめたピンの件数です。';
+    : '印を押すと、その海域を拡大します。印の数字は、まとめたピンの件数です。' + plannedNote();
   areaBox.hidden = true;
 }
 
@@ -319,7 +328,7 @@ function renderArea() {
     const [x, y] = projection.project(pin.lon, pin.lat);
     drawMarker(x, y, String(number), () => {
       location.hash = '#pin/' + pin.id;
-    });
+    }, pin.planned);
   });
 
   // --- 地図の下の一覧（番号は地図と同じ） ---
@@ -355,7 +364,7 @@ function renderArea() {
     '北が上です。丸の番号は下の一覧と同じです。' +
     (myPosition ? 'ひし形が現在地です。' : '') +
     (widthM < INSET_BELOW_M ? '左上の小さな地図は、まわり約250kmです（オレンジの点がこの海域）。' : '') +
-    '灰色は陸地のおおよその形で、数kmずれることがあります。';
+    '灰色は陸地のおおよその形で、数kmずれることがあります。' + plannedNote();
   areaBox.hidden = false;
 }
 

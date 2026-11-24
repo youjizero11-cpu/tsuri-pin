@@ -5,7 +5,7 @@
 //   ・最近のピンを3件表示する
 // ============================================================
 
-import { getBestPosition, formatCoord, distanceM } from '../geo.js';
+import { getBestPosition, formatPinCoord, distanceM } from '../geo.js';
 import { saveAll, getAll, getPinsNewestFirst } from '../db.js';
 import { newId, toIsoLocal, formatDateTime } from '../util.js';
 import { createEmptyCatch } from './catch.js';
@@ -37,6 +37,9 @@ async function findNearbyPin(lat, lon) {
 
   let nearest = null;
   for (const pin of await getAll('pins')) {
+    // 予定のピンは、目で決めたおおよその場所。そこに釣果を足すと、
+    // 実際に釣れた正確な位置が残らないので、候補にしない（新しいピンを打つ）
+    if (pin.planned) continue;
     const distance = distanceM(lat, lon, pin.lat, pin.lon);
     if (distance <= nearbyM && (!nearest || distance < nearest.distance)) {
       nearest = { pin, distance };
@@ -176,7 +179,7 @@ async function showRecentPins() {
 
     const coord = document.createElement('div');
     coord.className = 'row-sub';
-    coord.textContent = formatCoord(pin.lat, pin.lon, getSetting('coordFormat')) + '（±' + pin.accuracyM + 'm）';
+    coord.textContent = formatPinCoord(pin, getSetting('coordFormat'));
 
     link.append(name, coord);
 

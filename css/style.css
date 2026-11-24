@@ -210,6 +210,11 @@ body {
   stroke-width: 6;
 }
 
+/* 予定のピン（行く前に登録した場所）は、紺色で区別する */
+.map-pin-planned {
+  fill: var(--main);
+}
+
 .map-pin-text {
   fill: #ffffff;
   font-size: 46px;
@@ -250,6 +255,79 @@ body {
 
 .depth {
   align-self: stretch;
+}
+
+/* ---------- 行きたい場所を選ぶ地図 ---------- */
+
+.plan-map {
+  position: relative;
+  width: 100%;
+  /* 画面の幅と高さの小さい方に合わせる。下のボタンが隠れすぎないように */
+  height: min(100vw, 52vh);
+  margin-top: 8px;
+  overflow: hidden;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  /* 地図の上では、指の動きをページのスクロールではなく地図の移動に使う */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+/* タイル（地図の画像）1枚。置く場所は plan.js が決める */
+.plan-tile {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 256px;
+  height: 256px;
+  max-width: none;
+  pointer-events: none;
+}
+
+/* 真ん中の十字。ここがピンになる場所 */
+.plan-cross {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 96px;
+  height: 96px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 白いふちを付けて、どんな色の地図の上でも見えるようにする */
+.plan-cross path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  paint-order: stroke;
+  filter: drop-shadow(0 0 1px #ffffff) drop-shadow(0 0 1px #ffffff);
+}
+
+.plan-cross circle {
+  fill: var(--accent);
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.plan-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 2px 8px;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.plan-coord-label {
+  margin: 12px 0 0;
+  font-size: 16px;
+  text-align: center;
 }
 
 /* ---------- 押せる行のリスト（最近のピン、釣果の履歴） ---------- */

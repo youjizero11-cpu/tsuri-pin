@@ -37,6 +37,11 @@ function csvDate(iso) {
   return iso.slice(0, 16).replace('T', ' ');
 }
 
+// 「精度m」の欄に書く値。予定のピンはGPSで測っていないので、数字の代わりに「予定」と書く
+function csvAccuracy(pin) {
+  return pin.planned ? '予定' : pin.accuracyM;
+}
+
 // CSVファイルを作る。釣果1件が1行。釣果のないピンは、場所だけの行にする
 export async function buildCsv() {
   const pins = await getAll('pins');
@@ -57,14 +62,14 @@ export async function buildCsv() {
     if (!pin) continue;
     pinsWithCatch.add(pin.id);
     rows.push([
-      csvDate(record.caughtAt), pin.name, pin.lat, pin.lon, pin.accuracyM,
+      csvDate(record.caughtAt), pin.name, pin.lat, pin.lon, csvAccuracy(pin),
       record.species, record.sizeCm, record.count, record.depthM,
       record.tana, record.rig, record.memo, pin.memo,
     ]);
   }
   for (const pin of pins) {
     if (pinsWithCatch.has(pin.id)) continue;
-    rows.push(['', pin.name, pin.lat, pin.lon, pin.accuracyM, '', '', '', '', '', '', '', pin.memo]);
+    rows.push(['', pin.name, pin.lat, pin.lon, csvAccuracy(pin), '', '', '', '', '', '', '', pin.memo]);
   }
 
   const text = rows.map((row) => row.map(csvCell).join(',')).join('\r\n') + '\r\n';
@@ -144,6 +149,8 @@ function cleanPin(raw) {
     lat,
     lon,
     accuracyM: toNumberOrNull(raw.accuracyM) ?? 0,
+    // 予定のピン（行く前に登録した場所）かどうか
+    planned: raw.planned === true,
     memo: toText(raw.memo),
     createdAt: raw.createdAt,
     updatedAt: isDateText(raw.updatedAt) ? raw.updatedAt : raw.createdAt,
