@@ -67,6 +67,9 @@ const useServiceWorker =
   'serviceWorker' in navigator &&
   (!isLocal || new URLSearchParams(location.search).has('sw'));
 
+// 登録した Service Worker の情報（更新の確認に使う）
+let swRegistration = null;
+
 if (useServiceWorker) {
   // 新しい版に入れ替わったら、画面を自動で読み込み直して新しいファイルを使う。
   // （初めて開いたときは入れ替わりではないので、読み込み直さない）
@@ -78,13 +81,54 @@ if (useServiceWorker) {
   });
 
   navigator.serviceWorker.register('./sw.js')
-    .then(() => navigator.serviceWorker.ready)
+    .then((registration) => {
+      swRegistration = registration;
+      return navigator.serviceWorker.ready;
+    })
     .then(showAppInfo)
     .catch((error) => {
       console.error('Service Worker の登録に失敗しました', error);
       showAppInfo();
     });
+
+  // アプリを開き直さなくても、画面に戻ってきたときに新しい版がないか確認する。
+  // （スマホでは、アプリを閉じたつもりでも裏で開いたままのことが多いため）
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && navigator.onLine && swRegistration) {
+      swRegistration.update().catch(() => {});
+    }
+  });
 }
+
+// ---------- 設定画面の「最新版を確認」ボタン ----------
+
+const updateButton = document.getElementById('update-button');
+const updateStatus = document.getElementById('update-status');
+
+updateButton.addEventListener('click', async () => {
+  if (!swRegistration) {
+    updateStatus.textContent = 'いまは確認できません。アプリを開き直してから試してください。';
+    return;
+  }
+  if (!navigator.onLine) {
+    updateStatus.textContent = '圏外です。電波のある場所で試してください。';
+    return;
+  }
+
+  updateStatus.textContent = '確認しています…';
+  try {
+    await swRegistration.update();
+    // 新しい版があれば、取り込みが始まっている（installing / waiting に入る）。
+    // 取り込みが終わると、上の controllerchange で画面が自動で読み込み直される。
+    if (swRegistration.installing || swRegistration.waiting) {
+      updateStatus.textContent = '新しい版を取り込んでいます。そのままお待ちください…';
+    } else {
+      updateStatus.textContent = '最新の版です。';
+    }
+  } catch (error) {
+    updateStatus.textContent = '確認できませんでした。電波の良い場所でもう一度試してください。';
+  }
+});
 
 // ---------- 3. 設定画面の「アプリの状態」 ----------
 

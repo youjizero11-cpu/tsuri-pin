@@ -187,6 +187,33 @@ body {
   margin: 0;
 }
 
+/* ふつうのボタン（横幅いっぱい、指で押しやすい高さ） */
+.button {
+  display: block;
+  width: 100%;
+  min-height: var(--min-tap);
+  margin-top: 16px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: var(--main);
+  color: var(--main-text);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.button:active {
+  background: var(--accent);
+}
+
+/* ボタンの下の説明や結果 */
+.button-note {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+}
+
 .notes {
   margin: 0;
   padding-left: 1.2em;
